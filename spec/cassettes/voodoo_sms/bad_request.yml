@@ -1,0 +1,34 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: http://voodoosms.com/vapi/server/sendSMS?dest=4499810123123&format=json&msg=Test%20SMS%20from%20RSpec&orig=440000000000&pass=password&uid=username&validity=1
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers: {}
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Mon, 20 Oct 2014 14:06:52 GMT
+      Server:
+      - Apache
+      Content-Length:
+      - '44'
+      X-Powered-By:
+      - PleskLin
+      Ms-Author-Via:
+      - DAV
+      Connection:
+      - close
+      Content-Type:
+      - application/json
+    body:
+      encoding: UTF-8
+      string: '{"result":400,"resultText":"BAD REQUEST p1"}'
+    http_version:
+  recorded_at: Mon, 20 Oct 2014 14:06:53 GMT
+recorded_with: VCR 2.9.3
