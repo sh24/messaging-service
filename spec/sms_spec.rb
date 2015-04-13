@@ -4,7 +4,16 @@ describe SMS do
   subject { SMS.new(message) }
   let(:message) { { to: '4499810123123', msg: 'Test SMS from RSpec' } }
 
-  describe :send do
+  describe '#send' do
+    it "correctly sends with the options given" do
+      VCR.use_cassette('voodoo_sms/send') do
+        response = SMS.send(message)
+        expect(response.success).to be_truthy
+      end
+    end
+  end
+
+  describe '.send' do
     it 'request was successfully received at API' do
       VCR.use_cassette('voodoo_sms/send') do
         response = subject.send

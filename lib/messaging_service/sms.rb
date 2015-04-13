@@ -1,6 +1,10 @@
 class SMS
   SMSResponse = Struct.new(:success, :service_provider, :reference_id)
 
+  def self.send(opts = {})
+    new(opts).send
+  end
+
   def initialize(opts = {})
     @opts = opts
   end
