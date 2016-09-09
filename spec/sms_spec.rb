@@ -1,5 +1,11 @@
 require 'spec_helper'
 
+class TestClient
+  def send_sms(_,_,_)
+    sleep 10
+  end
+end
+
 describe SMS do
   subject { SMS.new(message) }
   let(:message) { { to: '4499810123123', msg: 'Test SMS from RSpec' } }
@@ -14,6 +20,17 @@ describe SMS do
   end
 
   describe '.send' do
+    context "when voodoo times out" do
+
+      let(:client) { TestClient.new }
+
+      it "raises a timeout error" do
+        allow(VoodooService).to receive(:client).and_return(client)
+        expect(Airbrake).to receive(:notify).with(Timeout::Error)
+        subject.send(0.001)
+      end
+    end
+
     it 'request was successfully received at API' do
       VCR.use_cassette('voodoo_sms/send') do
         response = subject.send

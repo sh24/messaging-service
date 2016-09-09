@@ -1,3 +1,5 @@
+require 'timeout'
+
 class SMS
   SMSResponse = Struct.new(:success, :service_provider, :reference_id)
 
@@ -9,8 +11,10 @@ class SMS
     @opts = opts
   end
 
-  def send
-    send_with_primary_service
+  def send(timeout_time = 15)
+    Timeout::timeout(timeout_time) {
+      send_with_primary_service
+    }
   rescue => e
     return attempt_with_fallback_service if @opts[:with_fallback]
     Airbrake.notify(e)
