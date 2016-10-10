@@ -90,7 +90,8 @@ describe SMS do
         it 'tries Twilio first' do
           expect(TwilioService).to receive_message_chain(:client, :account, :messages, :create)
           expect(VoodooService).to_not receive(:client)
-          subject.send
+          response = subject.send
+          expect(response.service_provider).to eq 'twilio'
         end
 
         it 'falls back to the usual behaviour if Twilio is down' do

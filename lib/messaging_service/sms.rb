@@ -15,7 +15,7 @@ class SMS
   def send(timeout_time = 15)
     if fallback_allowed? && voodoo_overriden?
       response = attempt_with_fallback_service
-      return if response.success
+      return response if response.success
     end
     Timeout::timeout(timeout_time) { send_with_primary_service }
   rescue => e
