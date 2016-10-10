@@ -9,10 +9,11 @@ Gem::Specification.new do |s|
   s.files       = ['lib/messaging_service']
   s.homepage    = 'https://github.com/sh24'
   s.license     = 'MIT'
+
   s.add_runtime_dependency 'voodoo_sms', ['~> 1.1.1']
   s.add_runtime_dependency 'twilio-ruby', ['~> 3.14.0']
   s.add_runtime_dependency 'airbrake', ['~> 4.0.0']
-  s.add_runtime_dependency 'rails_config', ['~> 0.4.2']
+
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'webmock'
   s.add_development_dependency 'vcr'

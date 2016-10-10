@@ -2,6 +2,7 @@ require 'timeout'
 
 class SMS
   SMSResponse = Struct.new(:success, :service_provider, :reference_id)
+  OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'
 
   def self.send(opts = {})
     new(opts).send
@@ -12,11 +13,13 @@ class SMS
   end
 
   def send(timeout_time = 15)
-    Timeout::timeout(timeout_time) {
-      send_with_primary_service
-    }
+    if fallback_allowed? && voodoo_overriden?
+      response = attempt_with_fallback_service
+      return if response.success
+    end
+    Timeout::timeout(timeout_time) { send_with_primary_service }
   rescue => e
-    return attempt_with_fallback_service if @opts[:with_fallback]
+    return attempt_with_fallback_service if fallback_allowed?
     Airbrake.notify(e)
     SMSResponse.new(false)
   end
@@ -36,5 +39,13 @@ class SMS
   rescue => e
     Airbrake.notify(e)
     SMSResponse.new(false)
+  end
+
+  private def fallback_allowed?
+    @opts[:with_fallback]
+  end
+
+  private def voodoo_overriden?
+    File.exist?(OVERRIDE_VOODOO_FILE)
   end
 end
