@@ -24,3 +24,18 @@ Example usage:
 
 ```
 SMS.send({ to: "44123123123", msg: "My message" })
+```
+
+
+Skipping VoodooSMS
+==================
+
+Occasionally there have been issues where the VoodooSMS API is accepting messages (and so not triggering the fallback to Twilio) but not actually sending them out.
+
+To combat this, the gem has an override function:
+
+1. Run `touch tmp/VOODOO_OVERRIDE` in the project root
+
+To remove the override and go back to using Voodoo as the primary:
+
+1. Run `rm tmp/VOODOO_OVERRIDE` in the project root
