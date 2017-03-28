@@ -1,8 +1,5 @@
 module VoodooService
-  def self.client
-    VoodooSMS.new(
-      Settings.voodoo_sms.username,
-      Settings.voodoo_sms.password
-    )
+  def self.client(username: Settings.voodoo_sms.username, password: Settings.voodoo_sms.password)
+    VoodooSMS.new username, password
   end
 end
