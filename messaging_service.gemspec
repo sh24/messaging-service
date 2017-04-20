@@ -1,9 +1,9 @@
 Gem::Specification.new do |s|
   s.name        = 'messaging_service'
-  s.version     = '0.1.3'
-  s.date        = '2014-04-01'
-  s.summary     = 'Messaging service'
-  s.description = 'Shared SMS messaging service'
+  s.version     = '1.0.0'
+  s.date        = '2017-04-20'
+  s.summary     = 'Messaging Service'
+  s.description = 'Shared SMS messaging services'
   s.authors     = ['Tom Sabin']
   s.email       = 'tom.sabin@unboxedconsulting.com'
   s.files       = ['lib/messaging_service']
@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'voodoo_sms', ['~> 1.1.1']
   s.add_runtime_dependency 'twilio-ruby', ['~> 3.14.0']
-  s.add_runtime_dependency 'airbrake', ['~> 4.0.0']
+  s.add_runtime_dependency 'airbrake', ['> 4.0.0']
 
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'webmock'
