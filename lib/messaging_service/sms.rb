@@ -4,11 +4,12 @@ class SMS
   SMSResponse = Struct.new(:success, :service_provider, :reference_id)
   OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'
 
-  def self.send(opts = {})
-    new(opts).send
+  def self.send(opts = {}, voodoo_sender_id:)
+    new(opts, voodoo_sender_id: voodoo_sender_id).send
   end
 
-  def initialize(opts = {})
+  def initialize(opts = {}, voodoo_sender_id:)
+    @voodoo_sender_id = voodoo_sender_id
     @opts = opts
   end
 
@@ -25,7 +26,7 @@ class SMS
   end
 
   private def send_with_primary_service
-    reference_id = VoodooService.client.send_sms(Settings.voodoo_sms.sender_id, @opts[:to], @opts[:msg])
+    reference_id = VoodooService.client.send_sms(@voodoo_sender_id, @opts[:to], @opts[:msg])
     SMSResponse.new(true, 'voodoo', reference_id)
   end
 

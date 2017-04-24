@@ -14,7 +14,6 @@ Configure VoodooSMS and Twilio auth with [rails_config](https://github.com/rails
 ```
 Settings.voodoo_sms.username
 Settings.voodoo_sms.password
-Settings.voodoo_sms.sender_id
 Settings.twilio.account_id
 Settings.twilio.auth_token
 Settings.twilio.sms_number

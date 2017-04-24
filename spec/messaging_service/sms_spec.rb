@@ -7,13 +7,14 @@ class TestClient
 end
 
 describe SMS do
-  subject { SMS.new(message) }
-  let(:message) { { to: '4499810123123', msg: 'Test SMS from RSpec' } }
+  let(:voodoo_sender_id) { '440000000000' }
+  subject { SMS.new(message, voodoo_sender_id:  voodoo_sender_id) }
+  let(:message) { { to: '4499810123123', msg: 'Test SMS from RSpec'} }
 
   describe '#send' do
     it "correctly sends with the options given" do
       VCR.use_cassette('voodoo_sms/send') do
-        response = SMS.send(message)
+        response = SMS.send(message, voodoo_sender_id: voodoo_sender_id)
         expect(response.success).to be_truthy
       end
     end
@@ -42,7 +43,7 @@ describe SMS do
 
     it 'returns false if message fails to send' do
       expect(Airbrake).to receive(:notify)
-      expect(SMS.new({ msg: 'SMS body' }).send.success).to be_falsey
+      expect(SMS.new({ msg: 'SMS body' }, voodoo_sender_id: voodoo_sender_id).send.success).to be_falsey
     end
 
     it 'returns false if message fails to send' do
