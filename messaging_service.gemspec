@@ -1,8 +1,12 @@
 # frozen_string_literal: true
 
+lib = File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+require 'messaging_service/version'
+
 Gem::Specification.new do |s|
   s.name        = 'messaging_service'
-  s.version     = '1.0.0'
+  s.version     = MessagingService::VERSION
   s.date        = '2017-04-20'
   s.summary     = 'Messaging Service'
   s.description = 'Shared SMS messaging services'
