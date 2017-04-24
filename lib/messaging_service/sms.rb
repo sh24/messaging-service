@@ -1,6 +1,9 @@
+# frozen_string_literal: true
+
 require 'timeout'
 
 class SMS
+
   SMSResponse = Struct.new(:success, :service_provider, :reference_id)
   OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'
 
@@ -18,7 +21,7 @@ class SMS
       response = attempt_with_fallback_service
       return response if response.success
     end
-    Timeout::timeout(timeout_time) { send_with_primary_service }
+    Timeout.timeout(timeout_time){ send_with_primary_service }
   rescue => e
     return attempt_with_fallback_service if fallback_allowed?
     Airbrake.notify(e)
@@ -45,4 +48,5 @@ class SMS
   private def voodoo_overriden?
     File.exist?(OVERRIDE_VOODOO_FILE)
   end
+
 end

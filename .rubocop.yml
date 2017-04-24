@@ -1,0 +1,10 @@
+---
+AllCops:
+    TargetRubyVersion: 2.3
+
+inherit_from:
+  - https://raw.githubusercontent.com/dvmtn/house_style/master/rubocop.yml
+
+Style/FileName:
+  Exclude:
+    - 'Gemfile'

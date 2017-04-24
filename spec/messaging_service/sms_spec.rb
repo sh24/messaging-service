@@ -1,18 +1,22 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 class TestClient
-  def send_sms(_,_,_)
+
+  def send_sms(_, _, _)
     sleep 10
   end
+
 end
 
 describe SMS do
-  let(:voodoo_sender_id) { '440000000000' }
-  subject { SMS.new(message, voodoo_sender_id:  voodoo_sender_id) }
-  let(:message) { { to: '4499810123123', msg: 'Test SMS from RSpec'} }
+  let(:voodoo_sender_id){ '440000000000' }
+  subject{ SMS.new(message, voodoo_sender_id: voodoo_sender_id) }
+  let(:message){ { to: '4499810123123', msg: 'Test SMS from RSpec' } }
 
   describe '#send' do
-    it "correctly sends with the options given" do
+    it 'correctly sends with the options given' do
       VCR.use_cassette('voodoo_sms/send') do
         response = SMS.send(message, voodoo_sender_id: voodoo_sender_id)
         expect(response.success).to be_truthy
@@ -21,11 +25,10 @@ describe SMS do
   end
 
   describe '.send' do
-    context "when voodoo times out" do
+    context 'when voodoo times out' do
+      let(:client){ TestClient.new }
 
-      let(:client) { TestClient.new }
-
-      it "raises a timeout error" do
+      it 'raises a timeout error' do
         allow(VoodooService).to receive(:client).and_return(client)
         expect(Airbrake).to receive(:notify).with(Timeout::Error)
         subject.send(0.001)
@@ -36,8 +39,8 @@ describe SMS do
       VCR.use_cassette('voodoo_sms/send') do
         response = subject.send
         expect(response.success).to be_truthy
-        expect(response.reference_id).to eq "4103395"
-        expect(response.service_provider).to eq "voodoo"
+        expect(response.reference_id).to eq '4103395'
+        expect(response.service_provider).to eq 'voodoo'
       end
     end
 
@@ -54,14 +57,14 @@ describe SMS do
     end
 
     context 'with fallback enabled' do
-      let(:message) { { to: '4499810123123', msg: 'Test SMS from RSpec', with_fallback: true } }
+      let(:message){ { to: '4499810123123', msg: 'Test SMS from RSpec', with_fallback: true } }
 
       it 'falls back to another service when the primary service fails' do
         VCR.use_cassette('voodoo_sms/bad_request') do
           VCR.use_cassette('twilio/send') do
             response = subject.send
             expect(response.success).to be_truthy
-            expect(response.service_provider).to eq "twilio"
+            expect(response.service_provider).to eq 'twilio'
           end
         end
       end
@@ -86,7 +89,7 @@ describe SMS do
       end
 
       context 'when fallback is enabled' do
-        let(:message) { { to: '4499810123123', msg: 'Test SMS from RSpec', with_fallback: true } }
+        let(:message){ { to: '4499810123123', msg: 'Test SMS from RSpec', with_fallback: true } }
 
         it 'tries Twilio first' do
           expect(TwilioService).to receive_message_chain(:client, :account, :messages, :create)
@@ -99,12 +102,12 @@ describe SMS do
           expect(TwilioService).to receive(:client)
           expect(VoodooService).to receive(:client)
           expect(TwilioService).to receive(:client)
-          VCR.use_cassette('twilio/bad_request') { subject.send }
+          VCR.use_cassette('twilio/bad_request'){ subject.send }
         end
       end
 
       context 'when fallback is disabled' do
-        let(:message) { { to: '4499810123123', msg: 'Test SMS from RSpec', with_fallback: false } }
+        let(:message){ { to: '4499810123123', msg: 'Test SMS from RSpec', with_fallback: false } }
 
         it 'still uses Voodoo first' do
           expect(TwilioService).to_not receive(:client)
@@ -113,6 +116,5 @@ describe SMS do
         end
       end
     end
-
   end
 end

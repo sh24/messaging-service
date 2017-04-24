@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'airbrake'
 require 'voodoo_sms'
 require 'messaging_service/voodoo_service'

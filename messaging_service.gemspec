@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Gem::Specification.new do |s|
   s.name        = 'messaging_service'
   s.version     = '1.0.0'
@@ -20,6 +22,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'vcr'
   s.add_development_dependency 'rake', '> 10.0'
   s.add_development_dependency 'rake-n-bake'
+  s.add_development_dependency 'rubocop'
   s.add_development_dependency 'semver2'
   s.add_development_dependency 'pry'
   s.add_development_dependency 'pry-byebug'
