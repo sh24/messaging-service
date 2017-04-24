@@ -8,7 +8,7 @@ end
 
 describe SMS do
   subject { SMS.new(message) }
-  let(:message) { { to: '4499810123123', msg: 'Test SMS from RSpec' } }
+  let(:message) { { to: '4499810123123', msg: 'Test SMS from RSpec', voodoo_sender_id:  '440000000000'} }
 
   describe '#send' do
     it "correctly sends with the options given" do

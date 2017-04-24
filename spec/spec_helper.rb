@@ -7,7 +7,7 @@ require 'vcr'
 
 class Settings
   def self.voodoo_sms
-    Struct.new(:username, :password, :sender_id).new('username', 'password', '440000000000')
+    Struct.new(:username, :password).new('username', 'password')
   end
 
   def self.twilio
