@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require 'airbrake'
 require 'voodoo_sms'
-require 'messaging_service/voodoo_service'
 require 'twilio-ruby'
-require 'messaging_service/twilio_service'
 require 'messaging_service/sms'

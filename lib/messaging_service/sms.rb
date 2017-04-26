@@ -6,48 +6,57 @@ module MessagingService
   class SMS
 
     SMSResponse = Struct.new(:success, :service_provider, :reference_id)
-    OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'
+    OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'.freeze
 
-    def self.send(opts = {}, voodoo_sender_id:)
-      new(opts, voodoo_sender_id: voodoo_sender_id).send
+    def initialize(voodoo:, fallback_twilio: nil, notifier: nil)
+      @voodoo = voodoo
+      @twilio = fallback_twilio
+      @notifier = notifier
     end
 
-    def initialize(opts = {}, voodoo_sender_id:)
-      @voodoo_sender_id = voodoo_sender_id
-      @opts = opts
-    end
-
-    def send(timeout_time = 15)
+    def send(to:, message:, timeout: 15)
       if fallback_allowed? && voodoo_overriden?
-        response = attempt_with_fallback_service
+        response = send_with_twilio(to: to, message: message)
         return response if response.success
       end
-      Timeout.timeout(timeout_time){ send_with_primary_service }
+      Timeout.timeout(timeout){ send_with_voodoo(to: to, message: message) }
     rescue => e
-      return attempt_with_fallback_service if fallback_allowed?
-      Airbrake.notify(e)
+      return send_with_twilio(to: to, message: message) if fallback_allowed?
+      notify(e)
       SMSResponse.new(false)
     end
 
-    private def send_with_primary_service
-      reference_id = VoodooService.client.send_sms(@voodoo_sender_id, @opts[:to], @opts[:msg])
+    private def send_with_voodoo(to:, message:)
+      reference_id = voodoo_service.send_sms(@voodoo.number, to, message)
       SMSResponse.new(true, 'voodoo', reference_id)
     end
 
-    private def attempt_with_fallback_service
-      TwilioService.client.account.messages.create(from: Settings.twilio.sms_number, to: @opts[:to], body: @opts[:msg])
+    private def send_with_twilio(to:, message:)
+      twilio_service.account.messages.create(from: @twilio.number, to: to, body: message)
       SMSResponse.new(true, 'twilio')
     rescue => e
-      Airbrake.notify(e)
+      notify(e)
       SMSResponse.new(false)
     end
 
     private def fallback_allowed?
-      @opts[:with_fallback]
+      !@twilio.nil?
     end
 
     private def voodoo_overriden?
       File.exist?(OVERRIDE_VOODOO_FILE)
+    end
+
+    private def twilio_service
+      Twilio::REST::Client.new @twilio.username, @twilio.password
+    end
+
+    private def voodoo_service
+      VoodooSMS.new @voodoo.username, @voodoo.password
+    end
+
+    private def notify error
+      @notifier.notify(error) if @notifier
     end
 
   end

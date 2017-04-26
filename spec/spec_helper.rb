@@ -6,6 +6,7 @@ Bundler.setup
 require 'messaging_service'
 require 'webmock/rspec'
 require 'vcr'
+require 'pry-byebug'
 
 class Settings
 
