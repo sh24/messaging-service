@@ -8,21 +8,10 @@ Install with:
 gem 'messaging_service', git: 'git@github.com:sh24/messaging-service.git'
 ```
 
-
-Configure VoodooSMS and Twilio auth with [rails_config](https://github.com/railsconfig/rails_config) and set:
-
-```
-Settings.voodoo_sms.username
-Settings.voodoo_sms.password
-Settings.twilio.account_id
-Settings.twilio.auth_token
-Settings.twilio.sms_number
-```
-
 Example usage:
 
 ```
-SMS.send({ to: "44123123123", msg: "My message" })
+MessagingService::SMS.new(voodoo: <voodoo_config>, notifier: Airbrake)..send(to: <to_number>, message: <message>)
 ```
 
 
