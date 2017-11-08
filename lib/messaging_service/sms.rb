@@ -48,8 +48,9 @@ module MessagingService
     end
 
     private def send_with_twilio(to:, message:, **_)
-      twilio_service.account.messages.create(from: @twilio_credentials.number, to: to, body: message)
-      SMSResponse.new(true, 'twilio')
+      message = twilio_service.account.messages.create from: @twilio_credentials.number, to: to, body: message
+      reference_id = message.sid if message
+      SMSResponse.new true, 'twilio', reference_id
     end
 
     private def fallback_provider_provided?

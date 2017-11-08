@@ -57,6 +57,7 @@ describe MessagingService::SMS do
         VCR.use_cassette('twilio/send') do
           response = subject.send(to: to_number, message: message)
           expect(response.success).to be_truthy
+          expect(response.reference_id).to eq 'SM0b54a4a40c4d42c9a518a7cdc18c5647'
           expect(response.service_provider).to eq 'twilio'
         end
       end
