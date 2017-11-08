@@ -19,21 +19,25 @@ module MessagingService
     end
 
     def send(to:, message:, timeout: 15)
-      if voodoo_overriden?
-        response = send_with_twilio(to: to, message: message)
-        return response if response.success
-      end
+      send_with_primary_provider to: to, message: message, timeout: timeout
+    rescue StandardError => e
+      return send_with_fallback_provider(to: to, message: message, timeout: timeout) if fallback_provider_provided?
 
-      send_with_primary to: to, message: message, timeout: timeout
-    rescue => e
-      return send_with_twilio(to: to, message: message) if fallback_allowed?
       notify(e)
       SMSResponse.new(false)
     end
 
-    private def send_with_primary(**arguments)
-      return send_with_voodoo(arguments) if voodoo_primary_provider?
+    private def send_with_primary_provider(**arguments)
       return send_with_twilio(arguments) if twilio_primary_provider?
+      return send_with_voodoo(arguments) if voodoo_primary_provider?
+    end
+
+    private def send_with_fallback_provider(**arguments)
+      return send_with_voodoo(arguments) if voodoo_fallback_provider?
+      return send_with_twilio(arguments) if twilio_fallback_provider?
+    rescue StandardError => e
+      notify(e)
+      SMSResponse.new(false)
     end
 
     private def send_with_voodoo(to:, message:, timeout: 15)
@@ -43,15 +47,12 @@ module MessagingService
       end
     end
 
-    private def send_with_twilio(to:, message:, timeout: nil)
+    private def send_with_twilio(to:, message:, **)
       twilio_service.account.messages.create(from: @twilio_credentials.number, to: to, body: message)
       SMSResponse.new(true, 'twilio')
-    rescue => e
-      notify(e)
-      SMSResponse.new(false)
     end
 
-    private def fallback_allowed?
+    private def fallback_provider_provided?
       !@fallback_provider.nil?
     end
 
@@ -80,7 +81,15 @@ module MessagingService
     end
 
     private def twilio_primary_provider?
-      @primary_provider == :twilio
+      @primary_provider == :twilio || voodoo_overriden?
+    end
+
+    private def voodoo_fallback_provider?
+      @fallback_provider == :voodoo || voodoo_overriden?
+    end
+
+    private def twilio_fallback_provider?
+      @fallback_provider == :twilio
     end
 
     private def raise_argument_error

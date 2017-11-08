@@ -60,6 +60,28 @@ describe MessagingService::SMS do
           expect(response.service_provider).to eq 'twilio'
         end
       end
+
+      context 'when twilio is down and voodoo is set as fallback provider' do
+        subject do
+          described_class.new(
+            voodoo_credentials: voodoo_credentials,
+            twilio_credentials: twilio_credentials,
+            primary_provider:   :twilio,
+            fallback_provider:  :voodoo,
+            notifier:           notifier
+          )
+        end
+
+        it 'sends with voodoo' do
+          VCR.use_cassette('twilio/bad_request') do
+            VCR.use_cassette('voodoo_sms/send') do
+              response = subject.send(to: to_number, message: message, timeout: 15)
+              expect(response.success).to be_truthy
+              expect(response.service_provider).to eq 'voodoo'
+            end
+          end
+        end
+      end
     end
 
     context 'without a notifier' do
@@ -132,10 +154,13 @@ describe MessagingService::SMS do
         end
 
         it 'falls back to the usual behaviour if Twilio is down' do
-          expect(Twilio::REST::Client).to receive(:new)
-          expect(VoodooSMS).to receive(:new)
-          expect(Twilio::REST::Client).to receive(:new)
-          VCR.use_cassette('twilio/bad_request'){ subject.send(to: to_number, message: message) }
+          expect(Twilio::REST::Client).to receive(:new).and_call_original
+          expect(VoodooSMS).to receive(:new).and_call_original
+          VCR.use_cassette('twilio/bad_request') do
+            VCR.use_cassette('voodoo_sms/send') do
+              subject.send to: to_number, message: message, timeout: 15
+            end
+          end
         end
       end
 
