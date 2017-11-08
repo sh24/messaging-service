@@ -8,34 +8,42 @@ module MessagingService
     SMSResponse          = Struct.new(:success, :service_provider, :reference_id)
     OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'.freeze
 
-    def initialize(voodoo_credentials: nil, twilio_credentials: nil, fallback_provider: nil, notifier: nil)
+    def initialize(voodoo_credentials: nil, twilio_credentials: nil, primary_provider:, fallback_provider: nil, notifier: nil)
+      raise_argument_error if no_credentials_provided?(voodoo_credentials, twilio_credentials)
+
       @voodoo_credentials = voodoo_credentials
       @twilio_credentials = twilio_credentials
+      @primary_provider   = primary_provider
       @fallback_provider  = fallback_provider
       @notifier           = notifier
     end
 
     def send(to:, message:, timeout: 15)
-      if twilio_credentials_provided? && voodoo_overriden?
+      if voodoo_overriden?
         response = send_with_twilio(to: to, message: message)
         return response if response.success
       end
 
-      send_with_voodoo to: to, message: message, timeout: timeout
+      send_with_primary to: to, message: message, timeout: timeout
     rescue => e
       return send_with_twilio(to: to, message: message) if fallback_allowed?
       notify(e)
       SMSResponse.new(false)
     end
 
-    private def send_with_voodoo(to:, message:, timeout:)
+    private def send_with_primary(**arguments)
+      return send_with_voodoo(arguments) if voodoo_primary_provider?
+      return send_with_twilio(arguments) if twilio_primary_provider?
+    end
+
+    private def send_with_voodoo(to:, message:, timeout: 15)
       Timeout.timeout(timeout) do
         reference_id = voodoo_service.send_sms(@voodoo_credentials.number, to, message)
         SMSResponse.new(true, 'voodoo', reference_id)
       end
     end
 
-    private def send_with_twilio(to:, message:)
+    private def send_with_twilio(to:, message:, timeout: nil)
       twilio_service.account.messages.create(from: @twilio_credentials.number, to: to, body: message)
       SMSResponse.new(true, 'twilio')
     rescue => e
@@ -48,7 +56,7 @@ module MessagingService
     end
 
     private def voodoo_overriden?
-      File.exist?(OVERRIDE_VOODOO_FILE)
+      File.exist?(OVERRIDE_VOODOO_FILE) && twilio_credentials_provided?
     end
 
     private def twilio_service
@@ -65,6 +73,22 @@ module MessagingService
 
     private def twilio_credentials_provided?
       !@twilio_credentials.nil?
+    end
+
+    private def voodoo_primary_provider?
+      @primary_provider == :voodoo
+    end
+
+    private def twilio_primary_provider?
+      @primary_provider == :twilio
+    end
+
+    private def raise_argument_error
+      raise ArgumentError, 'Provide at least one set of credentials'
+    end
+
+    private def no_credentials_provided?(*credentials)
+      credentials.all?(&:nil?)
     end
 
   end

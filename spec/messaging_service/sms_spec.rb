@@ -17,7 +17,7 @@ describe MessagingService::SMS do
   let(:message){ 'Test SMS from RSpec' }
   let(:notifier){ double :notifier, notify: true }
 
-  subject{ described_class.new(voodoo_credentials: voodoo_credentials, notifier: notifier) }
+  subject{ described_class.new voodoo_credentials: voodoo_credentials, primary_provider: :voodoo, notifier: notifier }
 
   describe '#send' do
     context 'when voodoo times out' do
@@ -26,7 +26,7 @@ describe MessagingService::SMS do
       it 'raises a timeout error' do
         allow(VoodooSMS).to receive(:new).and_return(client)
         expect(notifier).to receive(:notify).with(Timeout::Error)
-        subject.send(timeout: 0.001, to: to_number, message: message)
+        subject.send timeout: 0.001, to: to_number, message: message
       end
     end
 
@@ -39,9 +39,8 @@ describe MessagingService::SMS do
       end
     end
 
-    it 'returns false if message fails to send' do
-      expect(notifier).to receive(:notify)
-      expect(MessagingService::SMS.new(voodoo_credentials: nil, notifier: notifier).send(to: to_number, message: message).success).to be false
+    it 'raises an argument error if no credentials are provided' do
+      expect{ MessagingService::SMS.new(voodoo_credentials: nil, primary_provider: :voodoo, notifier: notifier) }.to raise_error(ArgumentError)
     end
 
     it 'returns false if message fails to send' do
@@ -51,8 +50,39 @@ describe MessagingService::SMS do
       end
     end
 
+    context 'with twilio as primary' do
+      subject{ described_class.new twilio_credentials: twilio_credentials, primary_provider: :twilio, notifier: notifier }
+
+      it 'sends an sms with twilio' do
+        VCR.use_cassette('twilio/send') do
+          response = subject.send(to: to_number, message: message)
+          expect(response.success).to be_truthy
+          expect(response.service_provider).to eq 'twilio'
+        end
+      end
+    end
+
+    context 'without a notifier' do
+      subject{ described_class.new voodoo_credentials: voodoo_credentials, primary_provider: :voodoo }
+
+      it 'still works, but does not call the notifier' do
+        VCR.use_cassette('voodoo_sms/bad_request') do
+          expect(notifier).not_to receive(:notify)
+          expect(subject.send(to: to_number, message: message).success).to be_falsey
+        end
+      end
+    end
+
     context 'with fallback enabled' do
-      subject{ described_class.new(voodoo_credentials: voodoo_credentials, twilio_credentials: twilio_credentials, notifier: notifier, fallback_provider: :twilio) }
+      subject do
+        described_class.new(
+          voodoo_credentials: voodoo_credentials,
+          twilio_credentials: twilio_credentials,
+          primary_provider:   :voodoo,
+          fallback_provider:  :twilio,
+          notifier:           notifier
+        )
+      end
 
       it 'falls back to another service when the primary service fails' do
         VCR.use_cassette('voodoo_sms/bad_request') do
@@ -84,7 +114,15 @@ describe MessagingService::SMS do
       end
 
       context 'when fallback is enabled' do
-        subject{ described_class.new(voodoo_credentials: voodoo_credentials, twilio_credentials: twilio_credentials, fallback_provider: :twilio, notifier: notifier) }
+        subject do
+          described_class.new(
+            voodoo_credentials: voodoo_credentials,
+            twilio_credentials: twilio_credentials,
+            primary_provider:   :voodoo,
+            fallback_provider:  :twilio,
+            notifier:           notifier
+          )
+        end
 
         it 'tries Twilio first' do
           expect(Twilio::REST::Client).to receive_message_chain(:new, :account, :messages, :create)
