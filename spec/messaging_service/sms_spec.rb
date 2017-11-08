@@ -11,14 +11,13 @@ class TestClient
 end
 
 describe MessagingService::SMS do
-  let(:voodoo_sender_id){ '440000000000' }
-  let(:voodoo_config){ double :voodoo_config, number: voodoo_sender_id, password: 'password', username: 'username' }
-  let(:twilio_sender_id){ '440000000000' }
-  let(:twilio_config){ double :voodoo_config, number: twilio_sender_id, password: 'auth_token', username: 'account_id' }
+  let(:voodoo_credentials){ double :voodoo_credentials, number: '440000000000', password: 'password', username: 'username' }
+  let(:twilio_credentials){ double :voodoo_credentials, number: '440000000000', password: 'auth_token', username: 'account_id' }
   let(:to_number){ '4499810123123' }
   let(:message){ 'Test SMS from RSpec' }
   let(:notifier){ double :notifier, notify: true }
-  subject{ described_class.new(voodoo: voodoo_config, notifier: notifier) }
+
+  subject{ described_class.new(voodoo_credentials: voodoo_credentials, notifier: notifier) }
 
   describe '#send' do
     context 'when voodoo times out' do
@@ -42,7 +41,7 @@ describe MessagingService::SMS do
 
     it 'returns false if message fails to send' do
       expect(notifier).to receive(:notify)
-      expect(MessagingService::SMS.new(voodoo: nil, notifier: notifier).send(to: to_number, message: message).success).to be false
+      expect(MessagingService::SMS.new(voodoo_credentials: nil, notifier: notifier).send(to: to_number, message: message).success).to be false
     end
 
     it 'returns false if message fails to send' do
@@ -53,7 +52,7 @@ describe MessagingService::SMS do
     end
 
     context 'with fallback enabled' do
-      subject{ described_class.new(voodoo: voodoo_config, fallback_twilio: twilio_config, notifier: notifier) }
+      subject{ described_class.new(voodoo_credentials: voodoo_credentials, twilio_credentials: twilio_credentials, notifier: notifier) }
 
       it 'falls back to another service when the primary service fails' do
         VCR.use_cassette('voodoo_sms/bad_request') do
@@ -85,7 +84,7 @@ describe MessagingService::SMS do
       end
 
       context 'when fallback is enabled' do
-        subject{ described_class.new(voodoo: voodoo_config, fallback_twilio: twilio_config, notifier: notifier) }
+        subject{ described_class.new(voodoo_credentials: voodoo_credentials, twilio_credentials: twilio_credentials, notifier: notifier) }
 
         it 'tries Twilio first' do
           expect(Twilio::REST::Client).to receive_message_chain(:new, :account, :messages, :create)

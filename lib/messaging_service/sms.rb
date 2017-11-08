@@ -5,13 +5,13 @@ require 'timeout'
 module MessagingService
   class SMS
 
-    SMSResponse = Struct.new(:success, :service_provider, :reference_id)
-    OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'
+    SMSResponse          = Struct.new(:success, :service_provider, :reference_id)
+    OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'.freeze
 
-    def initialize(voodoo:, fallback_twilio: nil, notifier: nil)
-      @voodoo = voodoo
-      @twilio = fallback_twilio
-      @notifier = notifier
+    def initialize(voodoo_credentials:, twilio_credentials: nil, notifier: nil)
+      @voodoo_credentials = voodoo_credentials
+      @twilio_credentials = twilio_credentials
+      @notifier           = notifier
     end
 
     def send(to:, message:, timeout: 15)
@@ -27,12 +27,12 @@ module MessagingService
     end
 
     private def send_with_voodoo(to:, message:)
-      reference_id = voodoo_service.send_sms(@voodoo.number, to, message)
+      reference_id = voodoo_service.send_sms(@voodoo_credentials.number, to, message)
       SMSResponse.new(true, 'voodoo', reference_id)
     end
 
     private def send_with_twilio(to:, message:)
-      twilio_service.account.messages.create(from: @twilio.number, to: to, body: message)
+      twilio_service.account.messages.create(from: @twilio_credentials.number, to: to, body: message)
       SMSResponse.new(true, 'twilio')
     rescue => e
       notify(e)
@@ -40,7 +40,7 @@ module MessagingService
     end
 
     private def fallback_allowed?
-      !@twilio.nil?
+      !@twilio_credentials.nil?
     end
 
     private def voodoo_overriden?
@@ -48,11 +48,11 @@ module MessagingService
     end
 
     private def twilio_service
-      Twilio::REST::Client.new @twilio.username, @twilio.password
+      Twilio::REST::Client.new @twilio_credentials.username, @twilio_credentials.password
     end
 
     private def voodoo_service
-      VoodooSMS.new @voodoo.username, @voodoo.password
+      VoodooSMS.new @voodoo_credentials.username, @voodoo_credentials.password
     end
 
     private def notify error
