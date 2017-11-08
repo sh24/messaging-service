@@ -47,7 +47,7 @@ module MessagingService
       end
     end
 
-    private def send_with_twilio(to:, message:, **)
+    private def send_with_twilio(to:, message:, **_)
       twilio_service.account.messages.create(from: @twilio_credentials.number, to: to, body: message)
       SMSResponse.new(true, 'twilio')
     end
