@@ -52,7 +52,7 @@ describe MessagingService::SMS do
     end
 
     context 'with fallback enabled' do
-      subject{ described_class.new(voodoo_credentials: voodoo_credentials, twilio_credentials: twilio_credentials, notifier: notifier) }
+      subject{ described_class.new(voodoo_credentials: voodoo_credentials, twilio_credentials: twilio_credentials, notifier: notifier, fallback_provider: :twilio) }
 
       it 'falls back to another service when the primary service fails' do
         VCR.use_cassette('voodoo_sms/bad_request') do
@@ -84,7 +84,7 @@ describe MessagingService::SMS do
       end
 
       context 'when fallback is enabled' do
-        subject{ described_class.new(voodoo_credentials: voodoo_credentials, twilio_credentials: twilio_credentials, notifier: notifier) }
+        subject{ described_class.new(voodoo_credentials: voodoo_credentials, twilio_credentials: twilio_credentials, fallback_provider: :twilio, notifier: notifier) }
 
         it 'tries Twilio first' do
           expect(Twilio::REST::Client).to receive_message_chain(:new, :account, :messages, :create)
