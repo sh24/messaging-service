@@ -11,8 +11,8 @@ class TestClient
 end
 
 describe MessagingService::SMS do
-  let(:voodoo_credentials){ double :voodoo_credentials, number: '440000000000', password: 'password', username: 'username' }
-  let(:twilio_credentials){ double :voodoo_credentials, number: '440000000000', password: 'auth_token', username: 'account_id' }
+  let(:voodoo_credentials){ { number: '440000000000', password: 'password', username: 'username' } }
+  let(:twilio_credentials){ { number: '440000000000', password: 'auth_token', username: 'account_id' } }
   let(:to_number){ '4499810123123' }
   let(:message){ 'Test SMS from RSpec' }
   let(:notifier){ double :notifier, notify: true }
