@@ -11,7 +11,7 @@ gem 'messaging_service', git: 'git@github.com:sh24/messaging-service.git'
 Example usage:
 
 ```
-MessagingService::SMS.new(voodoo: <voodoo_config>, notifier: Airbrake)..send(to: <to_number>, message: <message>)
+MessagingService::SMS.new(voodoo_credentials: <voodoo_config>, twilio_credentials: <twilio_config>, primary_provider: :voodoo, fallback_provider: :twilio, notifier: Airbrake)
 ```
 
 
