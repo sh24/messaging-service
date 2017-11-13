@@ -6,7 +6,7 @@ module MessagingService
   class SMS
 
     SMSResponse = Struct.new(:success, :service_provider, :reference_id)
-    OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'.freeze
+    OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'
 
     def initialize(voodoo:, fallback_twilio: nil, notifier: nil)
       @voodoo = voodoo
@@ -56,7 +56,7 @@ module MessagingService
     end
 
     private def notify error
-      @notifier.notify(error) if @notifier
+      @notifier&.notify(error)
     end
 
   end
