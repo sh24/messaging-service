@@ -27,14 +27,14 @@ module MessagingService
       SMSResponse.new(false)
     end
 
-    private def send_with_primary_provider(**arguments)
-      return send_with_twilio(arguments) if twilio_primary_provider?
-      return send_with_voodoo(arguments) if voodoo_primary_provider?
+    private def send_with_primary_provider(to:, message:, timeout:)
+      return send_with_twilio(to: to, message: message) if twilio_primary_provider?
+      return send_with_voodoo(to: to, message: message, timeout: timeout) if voodoo_primary_provider?
     end
 
-    private def send_with_fallback_provider(**arguments)
-      return send_with_voodoo(arguments) if voodoo_fallback_provider?
-      return send_with_twilio(arguments) if twilio_fallback_provider?
+    private def send_with_fallback_provider(to:, message:, timeout:)
+      return send_with_voodoo(to: to, message: message, timeout: timeout) if voodoo_fallback_provider?
+      return send_with_twilio(to: to, message: message) if twilio_fallback_provider?
     rescue StandardError => e
       notify(e)
       SMSResponse.new(false)
@@ -47,7 +47,7 @@ module MessagingService
       end
     end
 
-    private def send_with_twilio(to:, message:, **_)
+    private def send_with_twilio(to:, message:)
       message = twilio_service.account.messages.create from: @twilio_credentials[:number], to: to, body: message
       reference_id = message.sid if message
       SMSResponse.new true, 'twilio', reference_id
