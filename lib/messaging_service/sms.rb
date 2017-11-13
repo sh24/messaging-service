@@ -6,7 +6,7 @@ module MessagingService
   class SMS
 
     SMSResponse          = Struct.new(:success, :service_provider, :reference_id)
-    OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'.freeze
+    OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'
 
     def initialize(voodoo_credentials: nil, twilio_credentials: nil, primary_provider:, fallback_provider: nil, notifier: nil)
       raise_argument_error if no_credentials_provided?(voodoo_credentials, twilio_credentials)
