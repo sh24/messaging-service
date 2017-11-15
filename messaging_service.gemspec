@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.license     = 'MIT'
 
   s.add_runtime_dependency 'airbrake', ['> 4.0.0']
-  s.add_runtime_dependency 'twilio-ruby', ['~> 3.14.0']
+  s.add_runtime_dependency 'twilio-ruby', ['~> 5.0']
   s.add_runtime_dependency 'voodoo_sms', ['~> 1.1.1']
 
   s.add_development_dependency 'bundler', '~> 1.12'
