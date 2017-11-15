@@ -5,6 +5,8 @@ require 'timeout'
 module MessagingService
   class SMS
 
+    class VoodooOverridenError < StandardError; end
+
     SMSResponse          = Struct.new(:success, :service_provider, :reference_id)
     OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'
 
@@ -30,12 +32,11 @@ module MessagingService
     private def send_with_primary_provider(to:, message:, timeout:)
       return send_with_twilio(to: to, message: message) if twilio_primary_provider?
       return send_with_voodoo(to: to, message: message, timeout: timeout) if voodoo_primary_provider?
-      SMSResponse.new(false)
     end
 
     private def send_with_fallback_provider(to:, message:, timeout:)
       return send_with_voodoo(to: to, message: message, timeout: timeout) if voodoo_fallback_provider?
-      return send_with_twilio(to: to, message: message) if twilio_fallback_provider? && !voodoo_overriden?
+      return send_with_twilio(to: to, message: message) if twilio_fallback_provider?
       SMSResponse.new(false)
     rescue StandardError => e
       notify(e)
@@ -43,6 +44,7 @@ module MessagingService
     end
 
     private def send_with_voodoo(to:, message:, timeout: 15)
+      raise VoodooOverridenError if voodoo_overriden?
       Timeout.timeout(timeout) do
         reference_id = voodoo_service.send_sms(@voodoo_credentials[:number], to, message)
         SMSResponse.new(true, 'voodoo', reference_id)
@@ -60,7 +62,7 @@ module MessagingService
     end
 
     private def voodoo_overriden?
-      File.exist?(OVERRIDE_VOODOO_FILE) && twilio_credentials_provided?
+      File.exist?(OVERRIDE_VOODOO_FILE)
     end
 
     private def twilio_service
@@ -80,11 +82,11 @@ module MessagingService
     end
 
     private def voodoo_primary_provider?
-      @primary_provider == :voodoo && !voodoo_overriden?
+      @primary_provider == :voodoo
     end
 
     private def twilio_primary_provider?
-      @primary_provider == :twilio || (voodoo_overriden? && twilio_fallback_provider?)
+      @primary_provider == :twilio
     end
 
     private def voodoo_fallback_provider?
