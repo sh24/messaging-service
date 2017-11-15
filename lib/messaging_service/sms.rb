@@ -30,11 +30,13 @@ module MessagingService
     private def send_with_primary_provider(to:, message:, timeout:)
       return send_with_twilio(to: to, message: message) if twilio_primary_provider?
       return send_with_voodoo(to: to, message: message, timeout: timeout) if voodoo_primary_provider?
+      SMSResponse.new(false)
     end
 
     private def send_with_fallback_provider(to:, message:, timeout:)
       return send_with_voodoo(to: to, message: message, timeout: timeout) if voodoo_fallback_provider?
-      return send_with_twilio(to: to, message: message) if twilio_fallback_provider?
+      return send_with_twilio(to: to, message: message) if twilio_fallback_provider? && !voodoo_overriden?
+      SMSResponse.new(false)
     rescue StandardError => e
       notify(e)
       SMSResponse.new(false)
@@ -78,15 +80,15 @@ module MessagingService
     end
 
     private def voodoo_primary_provider?
-      @primary_provider == :voodoo
+      @primary_provider == :voodoo && !voodoo_overriden?
     end
 
     private def twilio_primary_provider?
-      @primary_provider == :twilio || voodoo_overriden?
+      @primary_provider == :twilio || (voodoo_overriden? && twilio_fallback_provider?)
     end
 
     private def voodoo_fallback_provider?
-      @fallback_provider == :voodoo || voodoo_overriden?
+      @fallback_provider == :voodoo
     end
 
     private def twilio_fallback_provider?

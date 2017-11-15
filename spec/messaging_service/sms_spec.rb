@@ -17,7 +17,11 @@ describe MessagingService::SMS do
   let(:message){ 'Test SMS from RSpec' }
   let(:notifier){ double :notifier, notify: true }
 
-  subject{ described_class.new voodoo_credentials: voodoo_credentials, primary_provider: :voodoo, notifier: notifier }
+  subject do
+    described_class.new voodoo_credentials: voodoo_credentials,
+    twilio_credentials: twilio_credentials,
+    primary_provider: :voodoo, notifier: notifier
+  end
 
   describe '#send' do
     context 'when voodoo times out' do
@@ -136,6 +140,24 @@ describe MessagingService::SMS do
         FileUtils.rm_r 'tmp'
       end
 
+      context 'when fallback is not enabled' do
+        subject do
+          described_class.new(
+            voodoo_credentials: voodoo_credentials,
+            twilio_credentials: twilio_credentials,
+            primary_provider:   :voodoo,
+            notifier:           notifier
+          )
+        end
+
+        it 'does not send the message' do
+          expect(Twilio::REST::Client).to_not receive(:new)
+          expect(VoodooSMS).to_not receive(:new)
+          response = subject.send(to: to_number, message: message)
+          expect(response.success).to eq false
+        end
+      end
+
       context 'when fallback is enabled' do
         subject do
           described_class.new(
@@ -154,22 +176,22 @@ describe MessagingService::SMS do
           expect(response.service_provider).to eq 'twilio'
         end
 
-        it 'falls back to the usual behaviour if Twilio is down' do
+        it 'fails if Twilio is down' do
           expect(Twilio::REST::Client).to receive(:new).and_call_original
-          expect(VoodooSMS).to receive(:new).and_call_original
+          expect(VoodooSMS).to_not receive(:new)
           VCR.use_cassette('twilio/bad_request') do
-            VCR.use_cassette('voodoo_sms/send') do
-              subject.send to: to_number, message: message, timeout: 15
-            end
+            response = subject.send to: to_number, message: message, timeout: 15
+            expect(response.success).to eq false
           end
         end
       end
 
       context 'when fallback is disabled' do
-        it 'still uses Voodoo first' do
+        it 'fails' do
           expect(Twilio::REST::Client).to_not receive(:new)
-          expect(VoodooSMS).to receive(:new)
-          subject.send(to: to_number, message: message)
+          expect(VoodooSMS).to_not receive(:new)
+          response = subject.send(to: to_number, message: message)
+          expect(response.success).to eq false
         end
       end
     end
