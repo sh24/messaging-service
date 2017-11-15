@@ -170,7 +170,7 @@ describe MessagingService::SMS do
         end
 
         it 'tries Twilio first' do
-          expect(Twilio::REST::Client).to receive_message_chain(:new, :account, :messages, :create)
+          expect(Twilio::REST::Client).to receive_message_chain(:new, :api, :account, :messages, :create)
           expect(VoodooSMS).to_not receive(:new)
           response = subject.send(to: to_number, message: message)
           expect(response.service_provider).to eq 'twilio'
