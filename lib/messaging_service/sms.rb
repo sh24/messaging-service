@@ -46,7 +46,7 @@ module MessagingService
     private def send_with_voodoo(to:, message:, timeout: 15)
       raise VoodooOverridenError if voodoo_overriden?
       Timeout.timeout(timeout) do
-        reference_id = voodoo_service.send_sms(@voodoo_credentials[:number], to, message)
+        reference_id = json_parse_reference_id(voodoo_service.send_sms(@voodoo_credentials[:number], to, message))
         SMSResponse.new(true, 'voodoo', reference_id)
       end
     end
@@ -103,6 +103,12 @@ module MessagingService
 
     private def no_credentials_provided?(*credentials)
       credentials.all?(&:nil?)
+    end
+
+    private def json_parse_reference_id(reference_id)
+      JSON.parse(reference_id.to_s).first
+    rescue JSON::ParserError
+      reference_id
     end
 
   end
