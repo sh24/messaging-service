@@ -26,7 +26,7 @@ module MessagingService
       return send_with_fallback_provider(to: to, message: message, timeout: timeout) if fallback_provider_provided?
 
       notify(e)
-      SMSResponse.new(false)
+      SMSResponse.new(false, @primary_provider.to_s)
     end
 
     private def send_with_primary_provider(to:, message:, timeout:)
@@ -37,10 +37,10 @@ module MessagingService
     private def send_with_fallback_provider(to:, message:, timeout:)
       return send_with_voodoo(to: to, message: message, timeout: timeout) if voodoo_fallback_provider?
       return send_with_twilio(to: to, message: message) if twilio_fallback_provider?
-      SMSResponse.new(false)
+      SMSResponse.new(false, @primary_provider.to_s)
     rescue StandardError => e
       notify(e)
-      SMSResponse.new(false)
+      SMSResponse.new(false, @primary_provider.to_s)
     end
 
     private def send_with_voodoo(to:, message:, timeout: 15)

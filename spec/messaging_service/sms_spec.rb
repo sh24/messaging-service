@@ -87,6 +87,23 @@ describe MessagingService::SMS do
           end
         end
       end
+
+      context 'twilio is down and there is no fallback provider' do
+        subject do
+          described_class.new(
+            voodoo_credentials: voodoo_credentials,
+            primary_provider:   :twilio,
+            notifier:           notifier
+          )
+        end
+        it 'fails to send' do
+          VCR.use_cassette('twilio/bad_request') do
+            response = subject.send(to: to_number, message: message, timeout: 15)
+            expect(response.success).to eq false
+            expect(response.service_provider).to eq 'twilio'
+          end
+        end
+      end
     end
 
     context 'without a notifier' do
@@ -155,6 +172,7 @@ describe MessagingService::SMS do
           expect(VoodooSMS).to_not receive(:new)
           response = subject.send(to: to_number, message: message)
           expect(response.success).to eq false
+          expect(response.service_provider).to eq 'voodoo'
         end
       end
 
@@ -182,6 +200,7 @@ describe MessagingService::SMS do
           VCR.use_cassette('twilio/bad_request') do
             response = subject.send to: to_number, message: message, timeout: 15
             expect(response.success).to eq false
+            expect(response.service_provider).to eq 'voodoo'
           end
         end
       end
@@ -192,6 +211,7 @@ describe MessagingService::SMS do
           expect(VoodooSMS).to_not receive(:new)
           response = subject.send(to: to_number, message: message)
           expect(response.success).to eq false
+          expect(response.service_provider).to eq 'voodoo'
         end
       end
     end
