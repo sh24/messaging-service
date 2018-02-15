@@ -96,6 +96,7 @@ describe MessagingService::SMS do
             notifier:           notifier
           )
         end
+
         it 'fails to send' do
           VCR.use_cassette('twilio/bad_request') do
             response = subject.send(to: to_number, message: message, timeout: 15)

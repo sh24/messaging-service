@@ -37,6 +37,14 @@ Layout/SpaceBeforeBlockBraces:
 # Style
 #
 
+Style/BlockLength:
+  Exclude:
+    - 'spec/**/*_spec.rb'
+    - 'spec/**/*_spec.rb'
+    - 'spec/factories/**/*.rb'
+    - 'spec/spec_helper.rb'
+    - 'spec/support/shared_examples/*.rb'
+
 Style/DefWithParentheses:
   Enabled: false
 
@@ -110,14 +118,6 @@ Metrics/LineLength:
     - 'spec/**/*'
   Max: 140
   AllowURI: true
-
-Metrics/BlockLength:
-  Exclude:
-    - 'spec/**/*_spec.rb'
-    - 'spec/**/*_spec.rb'
-    - 'spec/factories/**/*.rb'
-    - 'spec/spec_helper.rb'
-    - 'spec/support/shared_examples/*.rb'
 
 #############################################
 # Security
