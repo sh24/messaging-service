@@ -52,6 +52,7 @@ module MessagingService
     end
 
     private def send_with_twilio(to:, message:)
+      to = "+#{to}" unless to[0] == '+'
       message = twilio_service.api.account.messages.create from: @twilio_credentials[:number], to: to, body: message
       reference_id = message.sid if message
       SMSResponse.new true, 'twilio', reference_id

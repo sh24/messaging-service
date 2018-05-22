@@ -19,8 +19,8 @@ describe MessagingService::SMS do
 
   subject do
     described_class.new voodoo_credentials: voodoo_credentials,
-    twilio_credentials: twilio_credentials,
-    primary_provider: :voodoo, notifier: notifier
+      twilio_credentials: twilio_credentials,
+      primary_provider: :voodoo, notifier: notifier
   end
 
   describe '#send' do
@@ -213,6 +213,39 @@ describe MessagingService::SMS do
           response = subject.send(to: to_number, message: message)
           expect(response.success).to eq false
           expect(response.service_provider).to eq 'voodoo'
+        end
+      end
+    end
+
+    context 'when sending via Twilio' do
+      subject do
+        described_class.new(
+          twilio_credentials: twilio_credentials,
+          primary_provider:   :twilio
+        )
+      end
+
+      context 'when the destination number has no + before a supported country code' do
+        let(:to_number){ '4499810123123' }
+
+        it 'appends a +' do
+          expect(Twilio::REST::Client)
+            .to receive_message_chain(:new, :api, :account, :messages, :create)
+            .with(hash_including(to: "+#{to_number}"))
+
+          subject.send(to: to_number, message: message)
+        end
+      end
+
+      context 'when the destination number already has a + before a supported country code' do
+        let(:to_number){ '+491747820400' }
+
+        it 'does not append a +' do
+          expect(Twilio::REST::Client)
+            .to receive_message_chain(:new, :api, :account, :messages, :create)
+            .with(hash_including(to: to_number))
+
+          subject.send(to: to_number, message: message)
         end
       end
     end
