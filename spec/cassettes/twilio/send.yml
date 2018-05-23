@@ -2,46 +2,69 @@
 http_interactions:
 - request:
     method: post
-    uri: https://account_id:auth_token@api.twilio.com/2010-04-01/Accounts/account_id/Messages.json
+    uri: https://api.twilio.com/2010-04-01/Accounts/<TWILIO_ACCOUNT>/Messages.json
     body:
-      encoding: US-ASCII
-      string: From=440000000000&To=4499810123123&Body=Test+SMS+from+RSpec
+      encoding: UTF-8
+      string: Body=Test+SMS+from+RSpec&From=441348800055&To=%2B447799323232
     headers:
-      Accept:
-      - application/json
+      User-Agent:
+      - twilio-ruby/5.10.1 (ruby/x86_64-darwin16 2.3.5-p376)
       Accept-Charset:
       - utf-8
-      User-Agent:
-      - twilio-ruby/3.14.0 (ruby/x86_64-darwin13.0 2.1.2-p95)
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
       Content-Type:
       - application/x-www-form-urlencoded
+      Accept:
+      - application/json
+      Authorization:
+      - Basic QUMwODYzMzE2OWEwYzVlNjg5YzI2ZTUyMzY3MDcwNmJiNDpmNzFhODU0MWM3MDY0ZmE0N2I3OTM3NTA3NjNlNzFiMg==
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
   response:
     status:
       code: 201
       message: CREATED
     headers:
-      Date:
-      - Fri, 14 Nov 2014 16:48:56 GMT
+      Access-Control-Allow-Credentials:
+      - 'true'
+      Access-Control-Allow-Headers:
+      - Accept, Authorization, Content-Type, If-Match, If-Modified-Since, If-None-Match,
+        If-Unmodified-Since
+      Access-Control-Allow-Methods:
+      - GET, POST, DELETE, OPTIONS
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Expose-Headers:
+      - ETag
       Content-Type:
       - application/json; charset=utf-8
-      Content-Length:
-      - '651'
-      Connection:
-      - close
+      Date:
+      - Wed, 23 May 2018 11:28:14 GMT
+      Strict-Transport-Security:
+      - max-age=15768000
+      Twilio-Concurrent-Requests:
+      - '1'
+      Twilio-Request-Duration:
+      - '0.116'
+      Twilio-Request-Id:
+      - RQ568304fb4da8487e8cc89fa52dc82c56
       X-Powered-By:
       - AT-5000
       X-Shenanigans:
       - none
+      Content-Length:
+      - '785'
+      Connection:
+      - keep-alive
     body:
       encoding: UTF-8
-      string: '{"sid": "SM0b54a4a40c4d42c9a518a7cdc18c5647", "date_created": null,
-        "date_updated": null, "date_sent": null, "account_sid": "account_id",
-        "to": "+4499810123123", "from": "+440000000000", "body": "Test SMS from RSpec",
-        "status": "queued", "num_segments": "1", "num_media": "0", "direction": "outbound-api",
-        "api_version": "2010-04-01", "price": null, "price_unit": "USD", "uri": "/2010-04-01/Accounts/account_id/Messages/SM0b54a4a40c4d42c9a518a7cdc18c5647.json",
-        "subresource_uris": {"media": "/2010-04-01/Accounts/account_id/Messages/SM0b54a4a40c4d42c9a518a7cdc18c5647/Media.json"}}'
-    http_version:
-  recorded_at: Fri, 14 Nov 2014 16:49:07 GMT
-recorded_with: VCR 2.9.3
+      string: '{"sid": "SM4225c983dae74e3da79fc5c3f15a826b", "date_created": "Wed,
+        23 May 2018 11:28:14 +0000", "date_updated": "Wed, 23 May 2018 11:28:14 +0000",
+        "date_sent": null, "account_sid": "<TWILIO_ACCOUNT>", "to": "+447799323232",
+        "from": "+441348800055", "messaging_service_sid": null, "body": "Test SMS
+        from RSpec", "status": "queued", "num_segments": "1", "num_media": "0", "direction":
+        "outbound-api", "api_version": "2010-04-01", "price": null, "price_unit":
+        "USD", "error_code": null, "error_message": null, "uri": "/2010-04-01/Accounts/<TWILIO_ACCOUNT>/Messages/SM4225c983dae74e3da79fc5c3f15a826b.json",
+        "subresource_uris": {"media": "/2010-04-01/Accounts/<TWILIO_ACCOUNT>/Messages/SM4225c983dae74e3da79fc5c3f15a826b/Media.json"}}'
+    http_version: 
+  recorded_at: Wed, 23 May 2018 11:28:14 GMT
+recorded_with: VCR 4.0.0

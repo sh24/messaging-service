@@ -27,4 +27,6 @@ VCR.configure do |c|
   c.default_cassette_options = {
     match_requests_on: [:method, VCR.request_matchers.uri_without_param(:msg, :dest)],
   }
+  c.filter_sensitive_data('<TWILIO_ACCOUNT>') { 'account' }
+  c.filter_sensitive_data('<TWILIO_TOKEN>') { 'token' }
 end

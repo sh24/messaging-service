@@ -12,8 +12,8 @@ end
 
 describe MessagingService::SMS do
   let(:voodoo_credentials){ { number: '440000000000', password: 'password', username: 'username' } }
-  let(:twilio_credentials){ { number: '440000000000', password: 'auth_token', username: 'account_id' } }
-  let(:to_number){ '4499810123123' }
+  let(:twilio_credentials){ { number: '440000000000', password: 'token', username: 'account' } }
+  let(:to_number){ '447799323232' }
   let(:message){ 'Test SMS from RSpec' }
   let(:notifier){ double :notifier, notify: true }
 
@@ -37,7 +37,7 @@ describe MessagingService::SMS do
     it 'request was successfully received at API' do
       VCR.use_cassette('voodoo_sms/send') do
         response = subject.send(to: to_number, message: message)
-        expect(response.success).to be_truthy
+        expect(response.success).to eq true
         expect(response.reference_id).to eq '4103395'
         expect(response.service_provider).to eq 'voodoo'
       end
@@ -57,11 +57,11 @@ describe MessagingService::SMS do
     context 'with twilio as primary' do
       subject{ described_class.new twilio_credentials: twilio_credentials, primary_provider: :twilio, notifier: notifier }
 
-      it 'sends an sms with twilio' do
+      it 'sends an SMS with twilio' do
         VCR.use_cassette('twilio/send') do
           response = subject.send(to: to_number, message: message)
-          expect(response.success).to be_truthy
-          expect(response.reference_id).to eq 'SM0b54a4a40c4d42c9a518a7cdc18c5647'
+          expect(response.success).to eq true
+          expect(response.reference_id).to eq 'SM4225c983dae74e3da79fc5c3f15a826b'
           expect(response.service_provider).to eq 'twilio'
         end
       end
@@ -81,7 +81,7 @@ describe MessagingService::SMS do
           VCR.use_cassette('twilio/bad_request') do
             VCR.use_cassette('voodoo_sms/send') do
               response = subject.send(to: to_number, message: message, timeout: 15)
-              expect(response.success).to be_truthy
+              expect(response.success).to eq true
               expect(response.service_provider).to eq 'voodoo'
             end
           end
@@ -133,7 +133,7 @@ describe MessagingService::SMS do
         VCR.use_cassette('voodoo_sms/bad_request') do
           VCR.use_cassette('twilio/send') do
             response = subject.send(to: to_number, message: message)
-            expect(response.success).to be_truthy
+            expect(response.success).to eq true
             expect(response.service_provider).to eq 'twilio'
           end
         end
@@ -226,7 +226,7 @@ describe MessagingService::SMS do
       end
 
       context 'when the destination number has no + before a supported country code' do
-        let(:to_number){ '4499810123123' }
+        let(:to_number){ '447799323232' }
 
         it 'appends a +' do
           expect(Twilio::REST::Client)
