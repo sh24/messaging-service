@@ -27,3 +27,16 @@ To combat this, the gem has an override function:
 To remove the override and go back to using Voodoo as the primary:
 
 1. Run `rm tmp/OVERRIDE_VOODOO` in the project root
+
+Testing in your application
+===========================
+
+So you don't need to VCR all tests that integrate with `MessagingService` then you can stub sending messages like below.
+
+```
+let(:sms_response) { double :sms_response, success: true, service_provider: '', reference_id: ''}
+
+before do
+  allow_any_instance_of(MessagingService::SMS).to receive(:send).and_return sms_response
+end
+```
