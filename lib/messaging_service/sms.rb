@@ -6,6 +6,7 @@ module MessagingService
   class SMS
 
     class VoodooOverridenError < StandardError; end
+    class BlacklistedNumberError < StandardError; end
 
     SMSResponse          = Struct.new(:success, :service_provider, :reference_id)
     OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'
@@ -22,11 +23,20 @@ module MessagingService
 
     def send(to:, message:, timeout: 15)
       send_with_primary_provider to: to, message: message, timeout: timeout
-    rescue StandardError => e
-      return send_with_fallback_provider(to: to, message: message, timeout: timeout) if fallback_provider_provided?
+    rescue StandardError => error
+      handle_send_exception(error: error, message_body: message, timeout: timeout, recipient: to)
+    end
 
-      notify(e)
+    private def handle_send_exception(error:, message_body:, timeout:, recipient:)
+      handle_voodoo_blacklist(error)
+      return send_with_fallback_provider(to: recipient, message: message_body, timeout: timeout) if fallback_provider_provided?
+
+      notify(error)
       SMSResponse.new(false, @primary_provider.to_s)
+    end
+
+    private def handle_voodoo_blacklist(error)
+      return raise BlacklistedNumberError if error.is_a?(VoodooSMS::Error::BadRequest) && error.message =~ /^Black List Number Found.*/i
     end
 
     private def send_with_primary_provider(to:, message:, timeout:)
