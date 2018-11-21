@@ -3,8 +3,8 @@
 require 'timeout'
 
 module MessagingService
-  class SMS
 
+  class SMS
     class VoodooOverridenError < StandardError; end
     class BlacklistedNumberError < StandardError; end
 
@@ -28,15 +28,15 @@ module MessagingService
     end
 
     private def handle_send_exception(error:, message_body:, timeout:, recipient:)
-      handle_voodoo_blacklist(error)
+      raise BlacklistedNumberError if voodoo_blacklist_error?(error)
       return send_with_fallback_provider(to: recipient, message: message_body, timeout: timeout) if fallback_provider_provided?
 
       notify(error)
       SMSResponse.new(false, @primary_provider.to_s)
     end
 
-    private def handle_voodoo_blacklist(error)
-      return raise BlacklistedNumberError if error.is_a?(VoodooSMS::Error::BadRequest) && error.message =~ /^Black List Number Found.*/i
+    private def voodoo_blacklist_error?(error)
+      error.is_a?(VoodooSMS::Error::BadRequest) && error.message =~ /^Black List Number Found.*/i
     end
 
     private def send_with_primary_provider(to:, message:, timeout:)
@@ -47,6 +47,7 @@ module MessagingService
     private def send_with_fallback_provider(to:, message:, timeout:)
       return send_with_voodoo(to: to, message: message, timeout: timeout) if voodoo_fallback_provider?
       return send_with_twilio(to: to, message: message) if twilio_fallback_provider?
+
       SMSResponse.new(false, @primary_provider.to_s)
     rescue StandardError => e
       notify(e)
@@ -55,6 +56,7 @@ module MessagingService
 
     private def send_with_voodoo(to:, message:, timeout: 15)
       raise VoodooOverridenError if voodoo_overriden?
+
       Timeout.timeout(timeout) do
         reference_id = json_parse_reference_id(voodoo_service.send_sms(@voodoo_credentials[:number], to, message))
         SMSResponse.new(true, 'voodoo', reference_id)
