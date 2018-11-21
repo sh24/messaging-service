@@ -1,0 +1,29 @@
+---
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/ruby:2.4.2
+
+    steps:
+      - checkout
+
+      # Install gems
+      - type: cache-restore
+        name: Restore bundle cache
+        keys:
+          - admin-bundle-{{ checksum "Gemfile.lock" }}
+
+      - run:
+          name: bundle install
+          command: bundle check || bundle install --path ./vendor/bundle
+
+      - type: cache-save
+        name: Store bundle cache
+        key: admin-bundle-{{ checksum "Gemfile.lock" }}
+        paths:
+          - ./vendor/bundle
+
+      - run:
+          name: Rake
+          command: bundle exec rake
