@@ -34,6 +34,17 @@ describe MessagingService::SMS do
       end
     end
 
+    context 'when Voodoo raises a blacklist error' do
+      let(:client){ TestClient.new }
+
+      it 'does not suppress the error' do
+        expect(VoodooSMS).to receive(:new).and_return(client)
+        expect(client).to receive(:send_sms).and_raise(VoodooSMS::Error::BadRequest, 'Black List Number Found')
+
+        expect { subject.send(to: '447870123456', message: 'Hello') }.to raise_error MessagingService::SMS::BlacklistedNumberError
+      end
+    end
+
     it 'request was successfully received at API' do
       VCR.use_cassette('voodoo_sms/send') do
         response = subject.send(to: to_number, message: message)

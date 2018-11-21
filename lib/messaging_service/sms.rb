@@ -3,9 +3,10 @@
 require 'timeout'
 
 module MessagingService
-  class SMS
 
+  class SMS
     class VoodooOverridenError < StandardError; end
+    class BlacklistedNumberError < StandardError; end
 
     SMSResponse          = Struct.new(:success, :service_provider, :reference_id)
     OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'
@@ -22,11 +23,20 @@ module MessagingService
 
     def send(to:, message:, timeout: 15)
       send_with_primary_provider to: to, message: message, timeout: timeout
-    rescue StandardError => e
-      return send_with_fallback_provider(to: to, message: message, timeout: timeout) if fallback_provider_provided?
+    rescue StandardError => error
+      handle_send_exception(error: error, message_body: message, timeout: timeout, recipient: to)
+    end
 
-      notify(e)
+    private def handle_send_exception(error:, message_body:, timeout:, recipient:)
+      raise BlacklistedNumberError if voodoo_blacklist_error?(error)
+      return send_with_fallback_provider(to: recipient, message: message_body, timeout: timeout) if fallback_provider_provided?
+
+      notify(error)
       SMSResponse.new(false, @primary_provider.to_s)
+    end
+
+    private def voodoo_blacklist_error?(error)
+      error.is_a?(VoodooSMS::Error::BadRequest) && error.message =~ /^Black List Number Found.*/i
     end
 
     private def send_with_primary_provider(to:, message:, timeout:)
@@ -37,6 +47,7 @@ module MessagingService
     private def send_with_fallback_provider(to:, message:, timeout:)
       return send_with_voodoo(to: to, message: message, timeout: timeout) if voodoo_fallback_provider?
       return send_with_twilio(to: to, message: message) if twilio_fallback_provider?
+
       SMSResponse.new(false, @primary_provider.to_s)
     rescue StandardError => e
       notify(e)
@@ -45,6 +56,7 @@ module MessagingService
 
     private def send_with_voodoo(to:, message:, timeout: 15)
       raise VoodooOverridenError if voodoo_overriden?
+
       Timeout.timeout(timeout) do
         reference_id = json_parse_reference_id(voodoo_service.send_sms(@voodoo_credentials[:number], to, message))
         SMSResponse.new(true, 'voodoo', reference_id)
