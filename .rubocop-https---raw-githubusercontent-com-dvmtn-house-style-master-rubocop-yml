@@ -1,3 +1,8 @@
+inherit_mode:
+  merge:
+    - Exclude
+    - Include
+
 AllCops:
   Include:
     - '**/Rakefile'
@@ -33,17 +38,12 @@ Layout/EmptyLinesAroundModuleBody:
 Layout/SpaceBeforeBlockBraces:
   Enabled: false
 
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
 #############################################
 # Style
 #
-
-Style/BlockLength:
-  Exclude:
-    - 'spec/**/*_spec.rb'
-    - 'spec/**/*_spec.rb'
-    - 'spec/factories/**/*.rb'
-    - 'spec/spec_helper.rb'
-    - 'spec/support/shared_examples/*.rb'
 
 Style/DefWithParentheses:
   Enabled: false
@@ -84,6 +84,9 @@ Style/TrailingCommaInArrayLiteral:
 Style/TrailingCommaInHashLiteral:
   EnforcedStyleForMultiline: comma
 
+Style/AccessModifierDeclarations:
+  EnforcedStyle: inline
+
 #############################################
 # Naming
 #
@@ -115,6 +118,13 @@ Lint/AssignmentInCondition:
 #############################################
 # Metrics
 #
+
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*_spec.rb'
+    - 'spec/spec_helper.rb'
+    - 'spec/factories/**/*.rb'
+    - 'spec/support/shared_examples/*.rb'
 
 Metrics/LineLength:
   Exclude:

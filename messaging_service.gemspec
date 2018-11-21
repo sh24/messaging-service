@@ -10,15 +10,15 @@ Gem::Specification.new do |s|
   s.date        = '2017-04-20'
   s.summary     = 'Messaging Service'
   s.description = 'Shared SMS messaging services'
-  s.authors     = ['Tom Sabin']
-  s.email       = 'tom.sabin@unboxedconsulting.com'
+  s.authors     = ['Tom Sabin', 'SH:24']
+  s.email       = 'devops@sh24.org.uk'
   s.files       = ['lib/messaging_service']
   s.homepage    = 'https://github.com/sh24'
   s.license     = 'MIT'
 
   s.add_runtime_dependency 'airbrake', ['> 4.0.0']
   s.add_runtime_dependency 'twilio-ruby', ['~> 5.0']
-  s.add_runtime_dependency 'voodoo_sms', ['~> 1.1.1']
+  s.add_runtime_dependency 'voodoo_sms', ['> 1.1']
 
   s.add_development_dependency 'bundler', '~> 1.12'
   s.add_development_dependency 'pry'

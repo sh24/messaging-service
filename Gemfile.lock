@@ -4,7 +4,7 @@ PATH
     messaging_service (5.1.1)
       airbrake (> 4.0.0)
       twilio-ruby (~> 5.0)
-      voodoo_sms (~> 1.1.1)
+      voodoo_sms (> 1.1)
 
 GEM
   remote: https://rubygems.org/
@@ -108,4 +108,4 @@ DEPENDENCIES
   webmock
 
 BUNDLED WITH
-   1.16.2
+   1.17.1
