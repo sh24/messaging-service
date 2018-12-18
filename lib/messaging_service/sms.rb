@@ -3,8 +3,8 @@
 require 'timeout'
 
 module MessagingService
-
   class SMS
+
     class VoodooOverridenError < StandardError; end
     class BlacklistedNumberError < StandardError; end
 
@@ -36,7 +36,7 @@ module MessagingService
     end
 
     private def voodoo_blacklist_error?(error)
-      error.is_a?(VoodooSMS::Error::BadRequest) && error.message =~ /^Black List Number Found.*/i
+      error.is_a?(VoodooSMS::Error::BadRequest) && error.message =~ /Black List Number Found/i
     end
 
     private def send_with_primary_provider(to:, message:, timeout:)
