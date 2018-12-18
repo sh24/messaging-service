@@ -4,8 +4,9 @@ require 'spec_helper'
 
 class TestClient
 
-  def send_sms(_, _, _)
-    sleep 10
+  def send_sms(*_args)
+    # Used by timeout error test
+    sleep 1
   end
 
 end
