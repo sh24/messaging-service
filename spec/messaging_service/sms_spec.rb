@@ -40,7 +40,7 @@ describe MessagingService::SMS do
 
       it 'does not suppress the error' do
         expect(VoodooSMS).to receive(:new).and_return(client)
-        expect(client).to receive(:send_sms).and_raise(VoodooSMS::Error::BadRequest, 'Black List Number Found')
+        expect(client).to receive(:send_sms).and_raise(VoodooSMS::Error::BadRequest, '400, Black List Number Found')
 
         expect { subject.send(to: '447870123456', message: 'Hello') }.to raise_error MessagingService::SMS::BlacklistedNumberError
       end

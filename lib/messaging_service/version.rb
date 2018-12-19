@@ -2,6 +2,6 @@
 
 module MessagingService
 
-  VERSION = '5.1.3'.freeze
+  VERSION = '5.1.3'
 
 end
