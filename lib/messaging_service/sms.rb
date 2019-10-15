@@ -23,8 +23,8 @@ module MessagingService
 
     def send(to:, message:, timeout: 15)
       send_with_primary_provider to: to, message: message, timeout: timeout
-    rescue StandardError => error
-      handle_send_exception(error: error, message_body: message, timeout: timeout, recipient: to)
+    rescue StandardError => e
+      handle_send_exception(error: e, message_body: message, timeout: timeout, recipient: to)
     end
 
     private def handle_send_exception(error:, message_body:, timeout:, recipient:)

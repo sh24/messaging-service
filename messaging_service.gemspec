@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'twilio-ruby', ['~> 5.0']
   s.add_runtime_dependency 'voodoo_sms', ['> 1.1']
 
-  s.add_development_dependency 'bundler', '~> 1.12'
+  s.add_development_dependency 'bundler'
   s.add_development_dependency 'pry'
   s.add_development_dependency 'pry-byebug'
   s.add_development_dependency 'rake', '> 10.0'
