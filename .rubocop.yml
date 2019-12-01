@@ -3,7 +3,7 @@ AllCops:
     TargetRubyVersion: 2.3.5
 
 inherit_from:
-  - https://raw.githubusercontent.com/dvmtn/house_style/master/rubocop.yml
+  - .rubocop-https---raw-githubusercontent-com-dvmtn-house-style-master-rubocop-yml
 
 Style/FileName:
   Exclude:
