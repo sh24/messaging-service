@@ -1,9 +1,47 @@
----
+# Ruby CircleCI 2.0 configuration file
 version: 2
+
+defaults: &defaults
+  working_directory: ~/repo
+  parallelism: 1
+  docker:
+    - image: circleci/ruby:2.4.2
+      environment:
+        RAILS_ENV: test
+        BUNDLER_VERSION: 2.0.2
+
 jobs:
-  build:
-    docker:
-      - image: circleci/ruby:2.4.2
+  test:
+    <<: *defaults
+    steps:
+      - checkout
+
+      # Install gems
+      - type: cache-restore
+        name: Restore bundle cache
+        keys:
+          - admin-bundle-{{ checksum "Gemfile.lock" }}
+
+      - run:
+          name: install dependencies
+          command: gem update --system && gem install bundler
+
+      - run:
+          name: bundle install
+          command: bundle install
+
+      - type: cache-save
+        name: Store bundle cache
+        key: admin-bundle-{{ checksum "Gemfile.lock" }}
+        paths:
+          - ./vendor/bundle
+
+      - run:
+          name: Rake
+          command: bundle exec rake
+
+  rubocop:
+    <<: *defaults
 
     steps:
       - checkout
@@ -15,8 +53,12 @@ jobs:
           - admin-bundle-{{ checksum "Gemfile.lock" }}
 
       - run:
+          name: install dependencies
+          command: gem update --system && gem install bundler
+
+      - run:
           name: bundle install
-          command: bundle check || bundle install --path ./vendor/bundle
+          command: bundle install
 
       - type: cache-save
         name: Store bundle cache
@@ -25,5 +67,16 @@ jobs:
           - ./vendor/bundle
 
       - run:
-          name: Rake
-          command: bundle exec rake
+          name: Rubocop
+          command: |
+            RUBOCOP_FILES="$(bundle exec rubocop -L | circleci tests split)"
+            bundle exec rubocop $RUBOCOP_FILES
+
+workflows:
+  version: 2
+  test_and_report:
+    jobs:
+      - rubocop
+      - test:
+          requires:
+            - rubocop
