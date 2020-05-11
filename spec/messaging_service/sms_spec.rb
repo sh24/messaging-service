@@ -260,6 +260,33 @@ describe MessagingService::SMS do
           subject.send(to: to_number, message: message)
         end
       end
+
+      context 'when Twilio raises a blacklist error' do
+        let(:to_number){ '+447700900123' }
+
+        before do
+          expect(Twilio::REST::Client)
+            .to receive_message_chain(:new, :api, :account, :messages, :create)
+            .with(hash_including(to: to_number))
+            .and_raise(
+              Twilio::REST::RestError.new(
+                'Unable to create record',
+                OpenStruct.new(
+                  status_code: 400,
+                  body: {
+                    'code'      => 21_610,
+                    'detail'    => 'The message From/To pair violates a blacklist rule.',
+                    'more_info' => 'https://www.twilio.com/docs/errors/21610',
+                  }
+                )
+              )
+            )
+        end
+
+        it 'raises a blacklist error' do
+          expect { subject.send(to: to_number, message: 'Hello') }.to raise_error MessagingService::SMS::BlacklistedNumberError
+        end
+      end
     end
   end
 end

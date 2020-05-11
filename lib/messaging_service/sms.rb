@@ -28,11 +28,16 @@ module MessagingService
     end
 
     private def handle_send_exception(error:, message_body:, timeout:, recipient:)
-      raise BlacklistedNumberError if voodoo_blacklist_error?(error)
+      raise BlacklistedNumberError if voodoo_blacklist_error?(error) || twilio_blacklist_error?(error)
       return send_with_fallback_provider(to: recipient, message: message_body, timeout: timeout) if fallback_provider_provided?
 
       notify(error)
       SMSResponse.new(false, @primary_provider.to_s)
+    end
+
+    private def twilio_blacklist_error?(error)
+      # https://www.twilio.com/docs/errors/21610
+      error.is_a?(Twilio::REST::RestError) && error.code == 21_610
     end
 
     private def voodoo_blacklist_error?(error)
