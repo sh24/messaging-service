@@ -260,6 +260,16 @@ describe MessagingService::SMS do
           subject.send(to: to_number, message: message)
         end
       end
+
+      context 'when Twilio raises a blacklist error' do
+        let(:to_number){ '447799323232' }
+
+        it 'raises a blacklist error' do
+          VCR.use_cassette('twilio/blacklisted_bad_request') do
+            expect { subject.send(to: '+447799323232', message: 'Hello') }.to raise_error MessagingService::SMS::BlacklistedNumberError
+          end
+        end
+      end
     end
   end
 end

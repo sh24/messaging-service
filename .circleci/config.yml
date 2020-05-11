@@ -24,7 +24,9 @@ jobs:
 
       - run:
           name: install dependencies
-          command: gem update --system && gem install bundler
+          command: |
+            sudo gem update --system
+            sudo gem install bundler
 
       - run:
           name: bundle install
@@ -54,7 +56,9 @@ jobs:
 
       - run:
           name: install dependencies
-          command: gem update --system && gem install bundler
+          command: |
+            sudo gem update --system
+            sudo gem install bundler
 
       - run:
           name: bundle install
