@@ -35,14 +35,14 @@ describe MessagingService::SMS do
       end
     end
 
-    context 'when Voodoo raises a blacklist error' do
+    context 'when Voodoo raises a blocklist error' do
       let(:client){ TestClient.new }
 
       it 'does not suppress the error' do
         expect(VoodooSMS).to receive(:new).and_return(client)
         expect(client).to receive(:send_sms).and_raise(VoodooSMS::Error::BadRequest, '400, Black List Number Found')
 
-        expect { subject.send(to: '447870123456', message: 'Hello') }.to raise_error MessagingService::SMS::BlacklistedNumberError
+        expect { subject.send(to: '447870123456', message: 'Hello') }.to raise_error MessagingService::SMS::BlocklistedNumberError
       end
     end
 
@@ -261,12 +261,12 @@ describe MessagingService::SMS do
         end
       end
 
-      context 'when Twilio raises a blacklist error' do
+      context 'when Twilio raises a blocklist error' do
         let(:to_number){ '447799323232' }
 
-        it 'raises a blacklist error' do
-          VCR.use_cassette('twilio/blacklisted_bad_request') do
-            expect { subject.send(to: '+447799323232', message: 'Hello') }.to raise_error MessagingService::SMS::BlacklistedNumberError
+        it 'raises a blocklist error' do
+          VCR.use_cassette('twilio/blocklisted_bad_request') do
+            expect { subject.send(to: '+447799323232', message: 'Hello') }.to raise_error MessagingService::SMS::BlocklistedNumberError
           end
         end
       end

@@ -6,7 +6,7 @@ module MessagingService
   class SMS
 
     class VoodooOverridenError < StandardError; end
-    class BlacklistedNumberError < StandardError; end
+    class BlocklistedNumberError < StandardError; end
 
     SMSResponse          = Struct.new(:success, :service_provider, :reference_id)
     OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'
@@ -28,19 +28,19 @@ module MessagingService
     end
 
     private def handle_send_exception(error:, message_body:, timeout:, recipient:)
-      raise BlacklistedNumberError if voodoo_blacklist_error?(error) || twilio_blacklist_error?(error)
+      raise BlocklistedNumberError if voodoo_blocklist_error?(error) || twilio_blocklist_error?(error)
       return send_with_fallback_provider(to: recipient, message: message_body, timeout: timeout) if fallback_provider_provided?
 
       notify(error)
       SMSResponse.new(false, @primary_provider.to_s)
     end
 
-    private def twilio_blacklist_error?(error)
+    private def twilio_blocklist_error?(error)
       # https://www.twilio.com/docs/errors/21610
       error.is_a?(Twilio::REST::RestError) && error.code == 21_610
     end
 
-    private def voodoo_blacklist_error?(error)
+    private def voodoo_blocklist_error?(error)
       error.is_a?(VoodooSMS::Error::BadRequest) && error.message =~ /Black List Number Found/i
     end
 
