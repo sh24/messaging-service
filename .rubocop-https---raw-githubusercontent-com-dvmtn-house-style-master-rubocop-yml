@@ -92,7 +92,7 @@ Style/AccessModifierDeclarations:
 #
 
 Naming/PredicateName:
-  NamePrefixBlacklist:
+  ForbiddenPrefixes:
     - is_
     - has_
     - have_
