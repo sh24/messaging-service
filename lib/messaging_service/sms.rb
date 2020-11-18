@@ -8,7 +8,7 @@ module MessagingService
     class VoodooOverridenError < StandardError; end
     class BlocklistedNumberError < StandardError; end
 
-    SMSResponse          = Struct.new(:success, :service_provider, :reference_id)
+    SMSResponse          = Struct.new(:success, :service_provider, :reference_id, :service_number)
     OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'
 
     def initialize(voodoo_credentials: nil, twilio_credentials: nil, primary_provider:, fallback_provider: nil, notifier: nil)
@@ -59,6 +59,14 @@ module MessagingService
       SMSResponse.new(false, @primary_provider.to_s)
     end
 
+    private def twilio_number(to:)
+      twilio_credentials[:numbers].find { |prefix, _service_number| to[/^\+?#{prefix}/] }
+    end
+
+    private def voodoo_number(to:)
+      voodoo_credentials[:numbers].find { |prefix, _service_number| to[/^\+?#{prefix}/] }
+    end
+
     private def send_with_voodoo(to:, message:, timeout: 15)
       raise VoodooOverridenError if voodoo_overriden?
 
@@ -70,7 +78,8 @@ module MessagingService
 
     private def send_with_twilio(to:, message:)
       to = "+#{to}" unless to[0] == '+'
-      message = twilio_service.api.account.messages.create from: @twilio_credentials[:number], to: to, body: message
+
+      message = twilio_service.api.account.messages.create from: twilio_number(to: to), to: to, body: message
       reference_id = message.sid if message
       SMSResponse.new true, 'twilio', reference_id
     end
