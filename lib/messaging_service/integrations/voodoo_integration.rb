@@ -10,10 +10,6 @@ module MessagingService
         'voodoo'
       end
 
-      def self.blocklist_error?(error)
-        error.is_a?(VoodooSMS::Error::BadRequest) && error.message =~ /Black List Number Found/i
-      end
-
       private
 
       def execute_message_send(message)
@@ -25,6 +21,10 @@ module MessagingService
       def build_response(response)
         reference_id = json_parse_reference_id(response)
         success_response(reference_id: reference_id)
+      end
+
+      def blocklist_error?(error)
+        error.is_a?(VoodooSMS::Error::BadRequest) && error.message =~ /Black List Number Found/i
       end
 
       def service

@@ -8,11 +8,6 @@ module MessagingService
         'twilio'
       end
 
-      def self.blocklist_error?(error)
-        # https://www.twilio.com/docs/errors/21610
-        error.is_a?(Twilio::REST::RestError) && error.code == 21_610
-      end
-
       private
 
       def execute_message_send(message)
@@ -23,6 +18,11 @@ module MessagingService
 
       def build_response(response)
         success_response(reference_id: response&.sid)
+      end
+
+      def blocklist_error?(error)
+        # https://www.twilio.com/docs/errors/21610
+        error.is_a?(Twilio::REST::RestError) && error.code == 21_610
       end
 
       def service

@@ -34,11 +34,15 @@ module MessagingService
       protected
 
       def execute_message_send(_message)
-        raise 'OVERRIDE ME!'
+        raise NotImplementedError, 'OVERRIDE ME!'
       end
 
       def build_response(_response)
-        raise 'OVERRIDE ME!'
+        raise NotImplementedError, 'OVERRIDE ME!'
+      end
+
+      def blocklist_error?(_response)
+        raise NotImplementedError, 'OVERRIDE ME!'
       end
 
       def success_response(reference_id:)
@@ -51,7 +55,7 @@ module MessagingService
 
       def chosen_service_number
         @chosen_service_number ||= prefixed_service_numbers.find do |prefix, _service_number|
-          destination_number[/^\+?#{prefix}/]
+          destination_number.match?(/^\+?#{prefix}/)
         end&.last || fallback_service_number
       end
 
@@ -61,10 +65,6 @@ module MessagingService
 
       def fallback_service_number
         prefixed_service_numbers.values.first
-      end
-
-      def blocklist_error?(error)
-        VoodooIntegration.blocklist_error?(error) || TwilioIntegration.blocklist_error?(error)
       end
 
     end
