@@ -41,7 +41,7 @@ module MessagingService
         raise NotImplementedError, 'OVERRIDE ME!'
       end
 
-      def blocklist_error?(_response)
+      def blocklist_error?(_error)
         raise NotImplementedError, 'OVERRIDE ME!'
       end
 
