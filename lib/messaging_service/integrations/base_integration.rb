@@ -64,7 +64,7 @@ module MessagingService
       end
 
       def fallback_service_number
-        prefixed_service_numbers.values.first
+        prefixed_service_numbers.to_h.values.first
       end
 
     end
