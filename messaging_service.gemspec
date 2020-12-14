@@ -16,6 +16,9 @@ Gem::Specification.new do |s|
   s.homepage    = 'https://github.com/sh24'
   s.license     = 'MIT'
 
+  s.required_ruby_version = '>= 2.5.0'
+
+  s.add_runtime_dependency 'activesupport', ['> 5.0.0']
   s.add_runtime_dependency 'airbrake', ['> 4.0.0']
   s.add_runtime_dependency 'twilio-ruby', ['~> 5.0']
   s.add_runtime_dependency 'voodoo_sms', ['> 1.1']
@@ -27,6 +30,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rake-n-bake'
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'rubocop'
+  s.add_development_dependency 'rubocop-performance'
   s.add_development_dependency 'semver2'
   s.add_development_dependency 'vcr'
   s.add_development_dependency 'webmock'

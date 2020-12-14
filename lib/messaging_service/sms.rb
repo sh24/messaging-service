@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require 'timeout'
+require 'active_support'
+require 'active_support/core_ext'
 
 module MessagingService
   class SMS
@@ -8,125 +10,77 @@ module MessagingService
     class VoodooOverridenError < StandardError; end
     class BlocklistedNumberError < StandardError; end
 
-    SMSResponse          = Struct.new(:success, :service_provider, :reference_id)
+    Response             = Struct.new(:success, :service_provider, :reference_id, :service_number)
     OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'
 
-    def initialize(voodoo_credentials: nil, twilio_credentials: nil, primary_provider:, fallback_provider: nil, notifier: nil)
+    def initialize(primary_provider:, voodoo_credentials: nil, twilio_credentials: nil, fallback_provider: nil, notifier: nil)
       raise_argument_error if no_credentials_provided?(voodoo_credentials, twilio_credentials)
 
       @voodoo_credentials = voodoo_credentials
       @twilio_credentials = twilio_credentials
-      @primary_provider   = primary_provider
-      @fallback_provider  = fallback_provider
-      @notifier           = notifier
+      choose_integrations(primary_provider, fallback_provider)
+      @notifier = notifier
     end
 
-    def send(to:, message:, timeout: 15)
-      send_with_primary_provider to: to, message: message, timeout: timeout
-    rescue StandardError => e
-      handle_send_exception(error: e, message_body: message, timeout: timeout, recipient: to)
-    end
-
-    private def handle_send_exception(error:, message_body:, timeout:, recipient:)
-      raise BlocklistedNumberError if voodoo_blocklist_error?(error) || twilio_blocklist_error?(error)
-      return send_with_fallback_provider(to: recipient, message: message_body, timeout: timeout) if fallback_provider_provided?
-
-      notify(error)
-      SMSResponse.new(false, @primary_provider.to_s)
-    end
-
-    private def twilio_blocklist_error?(error)
-      # https://www.twilio.com/docs/errors/21610
-      error.is_a?(Twilio::REST::RestError) && error.code == 21_610
-    end
-
-    private def voodoo_blocklist_error?(error)
-      error.is_a?(VoodooSMS::Error::BadRequest) && error.message =~ /Black List Number Found/i
-    end
-
-    private def send_with_primary_provider(to:, message:, timeout:)
-      return send_with_twilio(to: to, message: message) if twilio_primary_provider?
-      return send_with_voodoo(to: to, message: message, timeout: timeout) if voodoo_primary_provider?
-    end
-
-    private def send_with_fallback_provider(to:, message:, timeout:)
-      return send_with_voodoo(to: to, message: message, timeout: timeout) if voodoo_fallback_provider?
-      return send_with_twilio(to: to, message: message) if twilio_fallback_provider?
-
-      SMSResponse.new(false, @primary_provider.to_s)
-    rescue StandardError => e
-      notify(e)
-      SMSResponse.new(false, @primary_provider.to_s)
-    end
-
-    private def send_with_voodoo(to:, message:, timeout: 15)
-      raise VoodooOverridenError if voodoo_overriden?
-
-      Timeout.timeout(timeout) do
-        reference_id = json_parse_reference_id(voodoo_service.send_sms(@voodoo_credentials[:number], to, message))
-        SMSResponse.new(true, 'voodoo', reference_id)
+    def send(to:, message:)
+      if_sending_fails_unexpectedly(send_with_primary_provider(to: to, message: message)) do
+        send_with_fallback_provider(to: to, message: message)
       end
     end
 
-    private def send_with_twilio(to:, message:)
-      to = "+#{to}" unless to[0] == '+'
-      message = twilio_service.api.account.messages.create from: @twilio_credentials[:number], to: to, body: message
-      reference_id = message.sid if message
-      SMSResponse.new true, 'twilio', reference_id
+    private
+
+    def if_sending_fails_unexpectedly(primary_response)
+      return primary_response if primary_response.success
+
+      fallback_response = yield
+      fallback_response&.success ? fallback_response : primary_response
     end
 
-    private def fallback_provider_provided?
-      !@fallback_provider.nil?
+    def send_with_primary_provider(to:, message:)
+      build_integration(@primary_integration, @primary_credentials, to).send_message(message)
     end
 
-    private def voodoo_overriden?
-      File.exist?(OVERRIDE_VOODOO_FILE)
+    def send_with_fallback_provider(to:, message:)
+      return unless @fallback_integration && @fallback_credentials
+
+      build_integration(@fallback_integration, @fallback_credentials, to).send_message(message)
     end
 
-    private def twilio_service
-      Twilio::REST::Client.new @twilio_credentials[:username], @twilio_credentials[:password]
-    end
-
-    private def voodoo_service
-      VoodooSMS.new @voodoo_credentials[:username], @voodoo_credentials[:password]
-    end
-
-    private def notify error
-      @notifier&.notify(error)
-    end
-
-    private def twilio_credentials_provided?
-      !@twilio_credentials.nil?
-    end
-
-    private def voodoo_primary_provider?
-      @primary_provider == :voodoo
-    end
-
-    private def twilio_primary_provider?
-      @primary_provider == :twilio
-    end
-
-    private def voodoo_fallback_provider?
-      @fallback_provider == :voodoo
-    end
-
-    private def twilio_fallback_provider?
-      @fallback_provider == :twilio
-    end
-
-    private def raise_argument_error
+    def raise_argument_error
       raise ArgumentError, 'Provide at least one set of credentials'
     end
 
-    private def no_credentials_provided?(*credentials)
+    def no_credentials_provided?(*credentials)
       credentials.all?(&:nil?)
     end
 
-    private def json_parse_reference_id(reference_id)
-      JSON.parse(reference_id.to_s).first
-    rescue JSON::ParserError
-      reference_id
+    def choose_integrations(primary_provider, fallback_provider)
+      @primary_integration, @primary_credentials = provider_to_integration(primary_provider)
+      @fallback_integration, @fallback_credentials = provider_to_integration(fallback_provider)
+    end
+
+    def provider_to_integration(provider)
+      case provider.presence
+      when nil
+        [nil, nil]
+      when :voodoo
+        [Integrations::VoodooIntegration, @voodoo_credentials]
+      when :twilio
+        [Integrations::TwilioIntegration, @twilio_credentials]
+      else
+        raise "Unknown SMS service integration: #{provider}"
+      end
+    end
+
+    def build_integration(integration_klass, credentials, destination_number)
+      integration_klass.new(
+        credentials[:username],
+        credentials[:password],
+        credentials[:numbers],
+        destination_number,
+        @notifier
+      )
     end
 
   end

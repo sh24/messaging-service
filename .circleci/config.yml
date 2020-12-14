@@ -5,7 +5,7 @@ defaults: &defaults
   working_directory: ~/repo
   parallelism: 1
   docker:
-    - image: circleci/ruby:2.4.2
+    - image: circleci/ruby:2.5.1
       environment:
         RAILS_ENV: test
         BUNDLER_VERSION: 2.0.2

@@ -1,10 +1,5 @@
----
-AllCops:
-    TargetRubyVersion: 2.3.5
-
 inherit_from:
-  - .rubocop-https---raw-githubusercontent-com-dvmtn-house-style-master-rubocop-yml
+  - .rubocop_config.yml
 
-Style/FileName:
-  Exclude:
-    - 'Gemfile'
+require:
+  - rubocop-performance
