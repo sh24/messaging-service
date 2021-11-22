@@ -7,11 +7,9 @@ require 'active_support/core_ext'
 module MessagingService
   class SMS
 
-    class VoodooOverridenError < StandardError; end
     class BlocklistedNumberError < StandardError; end
 
-    Response             = Struct.new(:success, :service_provider, :reference_id, :service_number)
-    OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'
+    Response = Struct.new(:success, :service_provider, :reference_id, :service_number)
 
     def initialize(primary_provider:, voodoo_credentials: nil, twilio_credentials: nil, fallback_provider: nil, notifier: nil)
       raise_argument_error if no_credentials_provided?(voodoo_credentials, twilio_credentials)

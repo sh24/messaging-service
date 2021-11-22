@@ -4,7 +4,9 @@ module MessagingService
   module Integrations
     class VoodooIntegration < BaseIntegration
 
-      OVERRIDE_VOODOO_FILE = 'tmp/OVERRIDE_VOODOO'
+      class IntegrationDisabledError < StandardError; end
+
+      KILL_SWITCH_ENV_VAR = 'VOODOO_DISABLE_MESSAGING'
 
       def self.service_name
         'voodoo'
@@ -13,7 +15,7 @@ module MessagingService
       private
 
       def execute_message_send(message)
-        raise SMS::VoodooOverriddenError if voodoo_overridden?
+        raise IntegrationDisabledError if voodoo_overridden?
 
         service.send_sms(chosen_service_number, @destination_number, message)
       end
@@ -38,7 +40,7 @@ module MessagingService
       end
 
       def voodoo_overridden?
-        File.exist?(OVERRIDE_VOODOO_FILE)
+        ENV[KILL_SWITCH_ENV_VAR].present?
       end
 
     end
