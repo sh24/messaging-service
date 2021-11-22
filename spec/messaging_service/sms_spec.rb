@@ -205,13 +205,13 @@ describe MessagingService::SMS do
       end
     end
 
-    context "when #{described_class::OVERRIDE_VOODOO_FILE} exists" do
-      around do |test|
-        FileUtils.mkdir('tmp')
-        FileUtils.touch described_class::OVERRIDE_VOODOO_FILE
-        test.run
-        FileUtils.rm described_class::OVERRIDE_VOODOO_FILE
-        FileUtils.rm_r 'tmp'
+    context 'when the voodoo integration is disabled' do
+      before do
+        ENV['VOODOO_DISABLE_MESSAGING'] = 'true'
+      end
+
+      after do
+        ENV.delete('VOODOO_DISABLE_MESSAGING')
       end
 
       context 'when fallback is not enabled' do
