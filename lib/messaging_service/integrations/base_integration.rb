@@ -6,20 +6,24 @@ module MessagingService
 
       RESPONSE_TIMEOUT_SECONDS = 15
 
-      attr_reader :username, :password, :prefixed_service_numbers, :destination_number, :notifier
+      attr_reader :username, :password, :prefixed_service_numbers, :destination_number, :notifier, :metrics_recorder
 
-      def initialize(username, password, prefixed_service_numbers, destination_number, notifier)
+      def initialize(username, password, prefixed_service_numbers, destination_number, notifier, metrics_recorder:)
         @username = username
         @password = password
         @prefixed_service_numbers = prefixed_service_numbers
         @destination_number = destination_number
         @notifier = notifier
+        @metrics_recorder = metrics_recorder
       end
 
       def send_message(message)
-        Timeout.timeout(RESPONSE_TIMEOUT_SECONDS) do
-          build_response execute_message_send(message)
+        response = Timeout.timeout(RESPONSE_TIMEOUT_SECONDS) do
+          raw_response = metrics_recorder.measure(metric_name('latency')) { execute_message_send(message) }
+          build_response raw_response
         end
+        metrics_recorder.increment(metric_name('result'), status: 'success')
+        response
       rescue StandardError => e
         handle_send_exception(error: e)
       end
@@ -27,6 +31,7 @@ module MessagingService
       def handle_send_exception(error:)
         raise SMS::BlocklistedNumberError if blocklist_error?(error)
 
+        metrics_recorder.increment(metric_name('result'), status: 'failure')
         notify(error)
         failure_response
       end
@@ -65,6 +70,10 @@ module MessagingService
 
       def fallback_service_number
         prefixed_service_numbers.to_h.values.first
+      end
+
+      def metric_name(name)
+        "send_message/#{self.class.service_name}/#{name}"
       end
 
     end

@@ -20,11 +20,18 @@ describe MessagingService::SMS do
   let(:to_number){ '447799323232' }
   let(:message){ 'Test SMS from RSpec' }
   let(:notifier){ double :notifier, notify: true }
+  let(:metrics_recorder) { double('metrics') }
 
   subject do
     described_class.new voodoo_credentials: voodoo_credentials,
                         twilio_credentials: twilio_credentials,
-                        primary_provider: :voodoo, notifier: notifier
+                        primary_provider: :voodoo, notifier: notifier,
+                        metrics_recorder: metrics_recorder
+  end
+
+  before do
+    allow(metrics_recorder).to receive(:increment)
+    allow(metrics_recorder).to receive(:measure).and_yield
   end
 
   describe '#send' do
@@ -72,10 +79,18 @@ describe MessagingService::SMS do
         override_integration_timeout 15
       end
 
-      it 'raises a timeout error' do
+      before do
         allow(VoodooSMS).to receive(:new).and_return(client)
         expect(notifier).to receive(:notify).with(Timeout::Error)
+      end
+
+      it 'raises a timeout error' do
         subject.send to: to_number, message: message
+      end
+
+      it 'reports an error count' do
+        subject.send to: to_number, message: message
+        expect(metrics_recorder).to have_received(:increment).with('send_message/voodoo/result', status: 'failure')
       end
     end
 
@@ -111,7 +126,7 @@ describe MessagingService::SMS do
     end
 
     context 'with twilio as primary' do
-      subject{ described_class.new twilio_credentials: twilio_credentials, primary_provider: :twilio, notifier: notifier }
+      subject{ described_class.new twilio_credentials: twilio_credentials, primary_provider: :twilio, notifier: notifier, metrics_recorder: metrics_recorder }
 
       it 'sends an SMS with twilio' do
         VCR.use_cassette('twilio/send') do
@@ -122,6 +137,14 @@ describe MessagingService::SMS do
         end
       end
 
+      it 'records metrics' do
+        VCR.use_cassette('twilio/send') do
+          subject.send(to: to_number, message: message)
+          expect(metrics_recorder).to have_received(:increment).with('send_message/twilio/result', status: 'success')
+          expect(metrics_recorder).to have_received(:measure).with('send_message/twilio/latency')
+        end
+      end
+
       context 'when twilio is down and voodoo is set as fallback provider' do
         subject do
           described_class.new(
@@ -129,8 +152,16 @@ describe MessagingService::SMS do
             twilio_credentials: twilio_credentials,
             primary_provider: :twilio,
             fallback_provider: :voodoo,
-            notifier: notifier
+            notifier: notifier,
+            metrics_recorder: metrics_recorder
           )
+        end
+
+        it 'records metrics' do
+          VCR.use_cassette('twilio/bad_request') do
+            subject.send(to: to_number, message: message)
+            expect(metrics_recorder).to have_received(:increment).with('send_message/twilio/result', status: 'failure')
+          end
         end
 
         it 'sends with voodoo' do
