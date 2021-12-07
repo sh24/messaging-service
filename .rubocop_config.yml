@@ -221,6 +221,9 @@ Layout/LineLength:
   Max: 140
   AllowURI: true
 
+Metrics/ParameterLists:
+  Max: 6
+
 #############################################
 # Security
 #

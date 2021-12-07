@@ -11,13 +11,19 @@ module MessagingService
 
     Response = Struct.new(:success, :service_provider, :reference_id, :service_number)
 
-    def initialize(primary_provider:, voodoo_credentials: nil, twilio_credentials: nil, fallback_provider: nil, notifier: nil)
+    def initialize(primary_provider:,
+                   voodoo_credentials: nil,
+                   twilio_credentials: nil,
+                   fallback_provider: nil,
+                   notifier: nil,
+                   metrics_recorder: NullMetricsRecorder.new)
       raise_argument_error if no_credentials_provided?(voodoo_credentials, twilio_credentials)
 
       @voodoo_credentials = voodoo_credentials
       @twilio_credentials = twilio_credentials
       choose_integrations(primary_provider, fallback_provider)
       @notifier = notifier
+      @metrics_recorder = metrics_recorder
     end
 
     def send(to:, message:)
@@ -77,7 +83,8 @@ module MessagingService
         credentials[:password],
         credentials[:numbers],
         destination_number,
-        @notifier
+        @notifier,
+        metrics_recorder: @metrics_recorder
       )
     end
 
