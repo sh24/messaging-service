@@ -84,7 +84,7 @@ module MessagingService
         credentials[:numbers],
         destination_number,
         @notifier,
-        account_sid: credentials[:account_sid],
+        credentials[:account_sid],
         metrics_recorder: @metrics_recorder
       )
     end

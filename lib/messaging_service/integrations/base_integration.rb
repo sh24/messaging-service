@@ -8,7 +8,7 @@ module MessagingService
 
       attr_reader :username, :password, :prefixed_service_numbers, :destination_number, :notifier, :metrics_recorder, :account_sid
 
-      def initialize(username, password, prefixed_service_numbers, destination_number, notifier, account_sid:, metrics_recorder:) # rubocop:disable Metrics/ParameterLists
+      def initialize(username, password, prefixed_service_numbers, destination_number, notifier, account_sid, metrics_recorder:) # rubocop:disable Metrics/ParameterLists
         @username = username
         @password = password
         @account_sid = account_sid
