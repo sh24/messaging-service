@@ -21,10 +21,13 @@ describe MessagingService::SMS do
   let(:message){ 'Test SMS from RSpec' }
   let(:notifier){ double :notifier, notify: true }
   let(:metrics_recorder) { double('metrics') }
+  let(:credentials) {[
+    { provider: :twilio, numbers: configured_numbers, password: 'password', username: 'username' },
+    { provider: :voodoo, numbers: configured_numbers, password: 'token', username: 'account' },
+  ]}
 
   subject do
-    described_class.new voodoo_credentials: voodoo_credentials,
-                        twilio_credentials: twilio_credentials,
+    described_class.new credentials: credentials
                         primary_provider: :voodoo, notifier: notifier,
                         metrics_recorder: metrics_recorder
   end

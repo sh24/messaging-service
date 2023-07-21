@@ -12,6 +12,7 @@ module MessagingService
     Response = Struct.new(:success, :service_provider, :reference_id, :service_number)
 
     def initialize(primary_provider:,
+                   credentials: nil,
                    voodoo_credentials: nil,
                    twilio_credentials: nil,
                    fallback_provider: nil,
@@ -19,37 +20,26 @@ module MessagingService
                    metrics_recorder: NullMetricsRecorder.new)
       raise_argument_error if no_credentials_provided?(voodoo_credentials, twilio_credentials)
 
-      @voodoo_credentials = voodoo_credentials
-      @twilio_credentials = twilio_credentials
-      choose_integrations(primary_provider, fallback_provider)
+      # Allows old interface
+      if credentials.nil?
+        credentials = [voodoo_credentials, twilio_credentials].compact
+      end
+
+      add_integration_class(credentials)
       @notifier = notifier
       @metrics_recorder = metrics_recorder
     end
 
     def send(to:, message:)
-      if_sending_fails_unexpectedly(send_with_primary_provider(to: to, message: message)) do
-        send_with_fallback_provider(to: to, message: message)
+      @credentials.each do |credential|
+        response = build_integration(credential, to).send_message(message)
+        break response if response.success
       end
+
+      response
     end
 
     private
-
-    def if_sending_fails_unexpectedly(primary_response)
-      return primary_response if primary_response.success
-
-      fallback_response = yield
-      fallback_response&.success ? fallback_response : primary_response
-    end
-
-    def send_with_primary_provider(to:, message:)
-      build_integration(@primary_integration, @primary_credentials, to).send_message(message)
-    end
-
-    def send_with_fallback_provider(to:, message:)
-      return unless @fallback_integration && @fallback_credentials
-
-      build_integration(@fallback_integration, @fallback_credentials, to).send_message(message)
-    end
 
     def raise_argument_error
       raise ArgumentError, 'Provide at least one set of credentials'
@@ -59,9 +49,10 @@ module MessagingService
       credentials.all?(&:nil?)
     end
 
-    def choose_integrations(primary_provider, fallback_provider)
-      @primary_integration, @primary_credentials = provider_to_integration(primary_provider)
-      @fallback_integration, @fallback_credentials = provider_to_integration(fallback_provider)
+    def add_integration_class(credentials)
+      @credentials = credentials.map do |credential|
+        credential[:integration_klass] = provider_to_integration(credential[:provider])
+      end
     end
 
     def provider_to_integration(provider)
@@ -77,11 +68,11 @@ module MessagingService
       end
     end
 
-    def build_integration(integration_klass, credentials, destination_number)
-      integration_klass.new(
-        credentials[:username],
-        credentials[:password],
-        credentials[:numbers],
+    def build_integration(credential, destination_number)
+      credential[:integration_klass].new(
+        credential[:username],
+        credential[:password],
+        credential[:numbers],
         destination_number,
         @notifier,
         metrics_recorder: @metrics_recorder
