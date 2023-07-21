@@ -23,7 +23,7 @@ module MessagingService
                        primary_provider == :voodoo ? [voodoo_credentials, twilio_credentials] : [twilio_credentials, voodoo_credentials]
                      else
                        credentials
-                     end
+                     end.compact
 
       @notifier = notifier
       @metrics_recorder = metrics_recorder
