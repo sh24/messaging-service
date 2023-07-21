@@ -26,7 +26,7 @@ module MessagingService
       end
 
       def service
-        Twilio::REST::Client.new @username, @password
+        Twilio::REST::Client.new @username, @password, @account_sid
       end
 
     end
