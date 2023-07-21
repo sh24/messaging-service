@@ -157,7 +157,6 @@ describe MessagingService::SMS do
             voodoo_credentials: voodoo_credentials,
             twilio_credentials: twilio_credentials,
             primary_provider: :twilio,
-            fallback_provider: :voodoo,
             notifier: notifier,
             metrics_recorder: metrics_recorder
           )
@@ -217,7 +216,6 @@ describe MessagingService::SMS do
           voodoo_credentials: voodoo_credentials,
           twilio_credentials: twilio_credentials,
           primary_provider: :voodoo,
-          fallback_provider: :twilio,
           notifier: notifier
         )
       end
@@ -276,7 +274,6 @@ describe MessagingService::SMS do
             voodoo_credentials: voodoo_credentials,
             twilio_credentials: twilio_credentials,
             primary_provider: :voodoo,
-            fallback_provider: :twilio,
             notifier: notifier
           )
         end
