@@ -23,20 +23,22 @@ module MessagingService
       # Allows old interface
       if credentials.nil?
         if primary_provider == :voodoo
-         credentials = [voodoo_credentials, twilio_credentials].compact
+         @credentials = [voodoo_credentials, twilio_credentials].compact
         else
-          credentials = [twilio_credentials, voodoo_credentials].compact
+          @credentials = [twilio_credentials, voodoo_credentials].compact
         end
+      else
+        @credentials = credentials
       end
-
-      add_integration_class(credentials)
+      
       @notifier = notifier
       @metrics_recorder = metrics_recorder
     end
 
     def send(to:, message:)
       @credentials.each do |credential|
-        response = build_integration(credential, to).send_message(message)
+        integration_klass = provider_to_integration_klass(credential[:provider])
+        response = build_integration(credential, integration_klass, to).send_message(message)
         break response if response.success
       end
 
@@ -53,27 +55,21 @@ module MessagingService
       credentials.all?(&:nil?)
     end
 
-    def add_integration_class(credentials)
-      @credentials = credentials.map do |credential|
-        credential[:integration_klass] = provider_to_integration(credential[:provider])
-      end
-    end
-
-    def provider_to_integration(provider)
+    def provider_to_integration_klass(provider)
       case provider.presence
       when nil
-        [nil, nil]
+        nil
       when :voodoo
-        [Integrations::VoodooIntegration, @voodoo_credentials]
+        Integrations::VoodooIntegration
       when :twilio
-        [Integrations::TwilioIntegration, @twilio_credentials]
+        Integrations::TwilioIntegration
       else
         raise "Unknown SMS service integration: #{provider}"
       end
     end
 
-    def build_integration(credential, destination_number)
-      credential[:integration_klass].new(
+    def build_integration(integration_klass, credential, destination_number)
+      integration_klass.new(
         credential[:username],
         credential[:password],
         credential[:numbers],
