@@ -17,7 +17,7 @@ module MessagingService
                    twilio_credentials: nil,
                    notifier: nil,
                    metrics_recorder: NullMetricsRecorder.new)
-      raise_argument_error if no_credentials_provided?(voodoo_credentials, twilio_credentials)
+      raise_argument_error if no_credentials_provided?(credentials, voodoo_credentials, twilio_credentials)
 
       @credentials = if credentials.nil?
                        primary_provider == :voodoo ? [voodoo_credentials, twilio_credentials] : [twilio_credentials, voodoo_credentials]
