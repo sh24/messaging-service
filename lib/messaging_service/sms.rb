@@ -19,15 +19,8 @@ module MessagingService
                    metrics_recorder: NullMetricsRecorder.new)
       raise_argument_error if no_credentials_provided?(voodoo_credentials, twilio_credentials)
 
-      # We can now pass a mixed list of voodoo and twilio credentials as an array of credentials to init.
-      # We attempt to send a sms using each of the creds in turn, until the message is sent successfully.
-      # The following allows the old interface (passing both twilio and voodoo creds, with a primary provider flag) to continue to work
       @credentials = if credentials.nil?
-                       if primary_provider == :voodoo
-                         [voodoo_credentials, twilio_credentials].compact
-                       else
-                         [twilio_credentials, voodoo_credentials].compact
-                       end
+                       primary_provider == :voodoo ? [voodoo_credentials, twilio_credentials] : [twilio_credentials, voodoo_credentials]
                      else
                        credentials
                      end
