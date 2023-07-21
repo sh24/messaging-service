@@ -19,12 +19,7 @@ module MessagingService
                    metrics_recorder: NullMetricsRecorder.new)
       raise_argument_error if no_credentials_provided?(credentials, voodoo_credentials, twilio_credentials)
 
-      @credentials = if credentials.nil?
-                       primary_provider == :voodoo ? [voodoo_credentials, twilio_credentials] : [twilio_credentials, voodoo_credentials]
-                     else
-                       credentials
-                     end.compact
-
+      @credentials = normalise_credentials(credentials, voodoo_credentials, twilio_credentials, primary_provider)
       @notifier = notifier
       @metrics_recorder = metrics_recorder
     end
@@ -32,7 +27,7 @@ module MessagingService
     def send(to:, message:)
       @credentials.each do |credential|
         integration_klass = provider_to_integration_klass(credential[:provider])
-        response = build_integration(credential, integration_klass, to).send_message(message)
+        response = build_integration(integration_klass, credential, to).send_message(message)
         break response if response.success
       end
 
@@ -40,6 +35,22 @@ module MessagingService
     end
 
     private
+
+    def normalise_credentials(credentials, voodoo_credentials, twilio_credentials, primary_provider)
+      # We can now pass a mixed list of voodoo and twilio credentials as an array of credentials to init.
+      # We attempt to send a sms using each of the creds in turn, until the message is sent successfully.
+      # The following allows using the old interface (passing twilio and voodoo creds as seperate arguments,
+      # with a primary provider flag) to continue to work
+      return credentials unless credentials.nil?
+
+      voodoo_credentials[:provider] = :voodoo unless voodoo_credentials.nil?
+      twilio_credentials[:provider] = :twilio unless twilio_credentials.nil?
+
+      credentials = [voodoo_credentials, twilio_credentials].compact
+      return credentials if primary_provider == :voodoo
+
+      credentials.reverse
+    end
 
     def raise_argument_error
       raise ArgumentError, 'Provide at least one set of credentials'
