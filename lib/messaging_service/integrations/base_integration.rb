@@ -6,11 +6,12 @@ module MessagingService
 
       RESPONSE_TIMEOUT_SECONDS = 15
 
-      attr_reader :username, :password, :prefixed_service_numbers, :destination_number, :notifier, :metrics_recorder
+      attr_reader :username, :password, :prefixed_service_numbers, :destination_number, :notifier, :metrics_recorder, :account_sid
 
-      def initialize(username, password, prefixed_service_numbers, destination_number, notifier, metrics_recorder:)
+      def initialize(username, password, prefixed_service_numbers, destination_number, notifier, metrics_recorder:, account_sid: nil) # rubocop:disable Metrics/ParameterLists
         @username = username
         @password = password
+        @account_sid = account_sid
         @prefixed_service_numbers = prefixed_service_numbers
         @destination_number = destination_number
         @notifier = notifier
