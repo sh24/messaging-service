@@ -84,7 +84,7 @@ module MessagingService
         credentials[:numbers],
         destination_number,
         @notifier,
-        account_sid: credentials[:account_sid],
+        account_sid: credentials.try(:account_sid), # account_sid is included in twilio config but not voodoo vonfig
         metrics_recorder: @metrics_recorder
       )
     end
