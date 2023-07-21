@@ -11,44 +11,45 @@ module MessagingService
 
     Response = Struct.new(:success, :service_provider, :reference_id, :service_number)
 
-    def initialize(primary_provider:,
+    def initialize(primary_provider: nil,
+                   credentials: nil,
                    voodoo_credentials: nil,
                    twilio_credentials: nil,
-                   fallback_provider: nil,
                    notifier: nil,
                    metrics_recorder: NullMetricsRecorder.new)
-      raise_argument_error if no_credentials_provided?(voodoo_credentials, twilio_credentials)
+      raise_argument_error if no_credentials_provided?(credentials, voodoo_credentials, twilio_credentials)
 
-      @voodoo_credentials = voodoo_credentials
-      @twilio_credentials = twilio_credentials
-      choose_integrations(primary_provider, fallback_provider)
+      @credentials = normalise_credentials(credentials, voodoo_credentials, twilio_credentials, primary_provider)
       @notifier = notifier
       @metrics_recorder = metrics_recorder
     end
 
     def send(to:, message:)
-      if_sending_fails_unexpectedly(send_with_primary_provider(to: to, message: message)) do
-        send_with_fallback_provider(to: to, message: message)
+      @credentials.each do |credential|
+        integration_klass = provider_to_integration_klass(credential[:provider])
+        response = build_integration(integration_klass, credential, to).send_message(message)
+        return response if response.success
       end
+
+      response
     end
 
     private
 
-    def if_sending_fails_unexpectedly(primary_response)
-      return primary_response if primary_response.success
+    def normalise_credentials(credentials, voodoo_credentials, twilio_credentials, primary_provider)
+      # We can now pass a mixed list of voodoo and twilio credentials as an array of credentials to init.
+      # We attempt to send a sms using each of the creds in turn, until the message is sent successfully.
+      # The following allows using the old interface (passing twilio and voodoo creds as seperate arguments,
+      # with a primary provider flag) to continue to work
+      return credentials unless credentials.nil?
 
-      fallback_response = yield
-      fallback_response&.success ? fallback_response : primary_response
-    end
+      voodoo_credentials[:provider] = :voodoo unless voodoo_credentials.nil?
+      twilio_credentials[:provider] = :twilio unless twilio_credentials.nil?
 
-    def send_with_primary_provider(to:, message:)
-      build_integration(@primary_integration, @primary_credentials, to).send_message(message)
-    end
+      credentials = [voodoo_credentials, twilio_credentials].compact
+      return credentials if primary_provider == :voodoo
 
-    def send_with_fallback_provider(to:, message:)
-      return unless @fallback_integration && @fallback_credentials
-
-      build_integration(@fallback_integration, @fallback_credentials, to).send_message(message)
+      credentials.reverse
     end
 
     def raise_argument_error
@@ -59,29 +60,24 @@ module MessagingService
       credentials.all?(&:nil?)
     end
 
-    def choose_integrations(primary_provider, fallback_provider)
-      @primary_integration, @primary_credentials = provider_to_integration(primary_provider)
-      @fallback_integration, @fallback_credentials = provider_to_integration(fallback_provider)
-    end
-
-    def provider_to_integration(provider)
+    def provider_to_integration_klass(provider)
       case provider.presence
       when nil
-        [nil, nil]
+        nil
       when :voodoo
-        [Integrations::VoodooIntegration, @voodoo_credentials]
+        Integrations::VoodooIntegration
       when :twilio
-        [Integrations::TwilioIntegration, @twilio_credentials]
+        Integrations::TwilioIntegration
       else
         raise "Unknown SMS service integration: #{provider}"
       end
     end
 
-    def build_integration(integration_klass, credentials, destination_number)
+    def build_integration(integration_klass, credential, destination_number)
       integration_klass.new(
-        credentials[:username],
-        credentials[:password],
-        credentials[:numbers],
+        credential[:username],
+        credential[:password],
+        credential[:numbers],
         destination_number,
         @notifier,
         account_sid: credentials.try(:account_sid), # account_sid is included in twilio config but not voodoo config

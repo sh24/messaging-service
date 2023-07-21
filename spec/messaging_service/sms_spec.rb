@@ -12,6 +12,12 @@ class TestClient
 end
 
 describe MessagingService::SMS do
+  subject do
+    described_class.new credentials: credentials,
+                        notifier: notifier,
+                        metrics_recorder: metrics_recorder
+  end
+
   let(:english_number) { '440000000000' }
   let(:irish_number) { '3530000000000' }
   let(:configured_numbers) { { '44': english_number, '353': irish_number } }
@@ -21,12 +27,11 @@ describe MessagingService::SMS do
   let(:message){ 'Test SMS from RSpec' }
   let(:notifier){ double :notifier, notify: true }
   let(:metrics_recorder) { double('metrics') }
-
-  subject do
-    described_class.new voodoo_credentials: voodoo_credentials,
-                        twilio_credentials: twilio_credentials,
-                        primary_provider: :voodoo, notifier: notifier,
-                        metrics_recorder: metrics_recorder
+  let(:credentials) do
+    [
+      { provider: :twilio, numbers: configured_numbers, password: 'password', username: 'username' },
+      { provider: :voodoo, numbers: configured_numbers, password: 'token', username: 'account' },
+    ]
   end
 
   before do
@@ -73,6 +78,7 @@ describe MessagingService::SMS do
 
     context 'when voodoo times out' do
       let(:client){ TestClient.new }
+
       around do |example|
         override_integration_timeout 0.1
         example.run
@@ -108,14 +114,14 @@ describe MessagingService::SMS do
     it 'request was successfully received at API' do
       VCR.use_cassette('voodoo_sms/send') do
         response = subject.send(to: to_number, message: message)
-        expect(response.success).to eq true
+        expect(response.success).to be true
         expect(response.reference_id).to eq '4103395'
         expect(response.service_provider).to eq 'voodoo'
       end
     end
 
     it 'raises an argument error if no credentials are provided' do
-      expect{ MessagingService::SMS.new(voodoo_credentials: nil, primary_provider: :voodoo, notifier: notifier) }.to raise_error(ArgumentError)
+      expect{ described_class.new(voodoo_credentials: nil, primary_provider: :voodoo, notifier: notifier) }.to raise_error(ArgumentError)
     end
 
     it 'returns false if message fails to send' do
@@ -131,7 +137,7 @@ describe MessagingService::SMS do
       it 'sends an SMS with twilio' do
         VCR.use_cassette('twilio/send') do
           response = subject.send(to: to_number, message: message)
-          expect(response.success).to eq true
+          expect(response.success).to be true
           expect(response.reference_id).to eq 'SM4225c983dae74e3da79fc5c3f15a826b'
           expect(response.service_provider).to eq 'twilio'
         end
@@ -151,7 +157,6 @@ describe MessagingService::SMS do
             voodoo_credentials: voodoo_credentials,
             twilio_credentials: twilio_credentials,
             primary_provider: :twilio,
-            fallback_provider: :voodoo,
             notifier: notifier,
             metrics_recorder: metrics_recorder
           )
@@ -168,7 +173,7 @@ describe MessagingService::SMS do
           VCR.use_cassette('twilio/bad_request') do
             VCR.use_cassette('voodoo_sms/send') do
               response = subject.send(to: to_number, message: message)
-              expect(response.success).to eq true
+              expect(response.success).to be true
               expect(response.service_provider).to eq 'voodoo'
             end
           end
@@ -187,7 +192,7 @@ describe MessagingService::SMS do
         it 'fails to send' do
           VCR.use_cassette('twilio/bad_request') do
             response = subject.send(to: to_number, message: message)
-            expect(response.success).to eq false
+            expect(response.success).to be false
             expect(response.service_provider).to eq 'twilio'
           end
         end
@@ -211,7 +216,6 @@ describe MessagingService::SMS do
           voodoo_credentials: voodoo_credentials,
           twilio_credentials: twilio_credentials,
           primary_provider: :voodoo,
-          fallback_provider: :twilio,
           notifier: notifier
         )
       end
@@ -220,7 +224,7 @@ describe MessagingService::SMS do
         VCR.use_cassette('voodoo_sms/bad_request') do
           VCR.use_cassette('twilio/send') do
             response = subject.send(to: to_number, message: message)
-            expect(response.success).to eq true
+            expect(response.success).to be true
             expect(response.service_provider).to eq 'twilio'
           end
         end
@@ -256,10 +260,10 @@ describe MessagingService::SMS do
         end
 
         it 'does not send the message' do
-          expect(Twilio::REST::Client).to_not receive(:new)
-          expect(VoodooSMS).to_not receive(:new)
+          expect(Twilio::REST::Client).not_to receive(:new)
+          expect(VoodooSMS).not_to receive(:new)
           response = subject.send(to: to_number, message: message)
-          expect(response.success).to eq false
+          expect(response.success).to be false
           expect(response.service_provider).to eq 'voodoo'
         end
       end
@@ -270,24 +274,23 @@ describe MessagingService::SMS do
             voodoo_credentials: voodoo_credentials,
             twilio_credentials: twilio_credentials,
             primary_provider: :voodoo,
-            fallback_provider: :twilio,
             notifier: notifier
           )
         end
 
         it 'tries Twilio first' do
           expect(Twilio::REST::Client).to receive_message_chain(:new, :api, :account, :messages, :create)
-          expect(VoodooSMS).to_not receive(:new)
+          expect(VoodooSMS).not_to receive(:new)
           response = subject.send(to: to_number, message: message)
           expect(response.service_provider).to eq 'twilio'
         end
 
         it 'fails if Twilio is down' do
           expect(Twilio::REST::Client).to receive(:new).and_call_original
-          expect(VoodooSMS).to_not receive(:new)
+          expect(VoodooSMS).not_to receive(:new)
           VCR.use_cassette('twilio/bad_request') do
             response = subject.send to: to_number, message: message
-            expect(response.success).to eq false
+            expect(response.success).to be false
             expect(response.service_provider).to eq 'voodoo'
           end
         end
@@ -295,10 +298,10 @@ describe MessagingService::SMS do
 
       context 'when fallback is disabled' do
         it 'fails' do
-          expect(Twilio::REST::Client).to_not receive(:new)
-          expect(VoodooSMS).to_not receive(:new)
+          expect(Twilio::REST::Client).not_to receive(:new)
+          expect(VoodooSMS).not_to receive(:new)
           response = subject.send(to: to_number, message: message)
-          expect(response.success).to eq false
+          expect(response.success).to be false
           expect(response.service_provider).to eq 'voodoo'
         end
       end
@@ -351,7 +354,7 @@ describe MessagingService::SMS do
   def override_integration_timeout(value = 15)
     verbosity = $VERBOSE
     $VERBOSE = nil
-    MessagingService::Integrations::BaseIntegration.const_set 'RESPONSE_TIMEOUT_SECONDS', value
+    MessagingService::Integrations::BaseIntegration.const_set :RESPONSE_TIMEOUT_SECONDS, value
     $VERBOSE = verbosity
   end
 end
