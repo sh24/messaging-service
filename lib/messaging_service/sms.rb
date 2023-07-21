@@ -11,26 +11,27 @@ module MessagingService
 
     Response = Struct.new(:success, :service_provider, :reference_id, :service_number)
 
-    def initialize(primary_provider:,
+    def initialize(primary_provider: nil,
                    credentials: nil,
                    voodoo_credentials: nil,
                    twilio_credentials: nil,
-                   fallback_provider: nil,
                    notifier: nil,
                    metrics_recorder: NullMetricsRecorder.new)
       raise_argument_error if no_credentials_provided?(voodoo_credentials, twilio_credentials)
 
-      # Allows old interface
-      if credentials.nil?
-        if primary_provider == :voodoo
-         @credentials = [voodoo_credentials, twilio_credentials].compact
-        else
-          @credentials = [twilio_credentials, voodoo_credentials].compact
-        end
-      else
-        @credentials = credentials
-      end
-      
+      # We can now pass a mixed list of voodoo and twilio credentials as an array of credentials to init.
+      # We attempt to send a sms using each of the creds in turn, until the message is sent successfully.
+      # The following allows the old interface (passing both twilio and voodoo creds, with a primary provider flag) to continue to work
+      @credentials = if credentials.nil?
+                       if primary_provider == :voodoo
+                         [voodoo_credentials, twilio_credentials].compact
+                       else
+                         [twilio_credentials, voodoo_credentials].compact
+                       end
+                     else
+                       credentials
+                     end
+
       @notifier = notifier
       @metrics_recorder = metrics_recorder
     end

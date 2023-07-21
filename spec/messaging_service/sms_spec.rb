@@ -27,7 +27,7 @@ describe MessagingService::SMS do
   ]}
 
   subject do
-    described_class.new credentials: credentials
+    described_class.new credentials: credentials,
                         primary_provider: :voodoo, notifier: notifier,
                         metrics_recorder: metrics_recorder
   end
