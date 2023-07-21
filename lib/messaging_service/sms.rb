@@ -22,7 +22,11 @@ module MessagingService
 
       # Allows old interface
       if credentials.nil?
-        credentials = [voodoo_credentials, twilio_credentials].compact
+        if primary_provider == :voodoo
+         credentials = [voodoo_credentials, twilio_credentials].compact
+        else
+          credentials = [twilio_credentials, voodoo_credentials].compact
+        end
       end
 
       add_integration_class(credentials)
