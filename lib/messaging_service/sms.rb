@@ -28,7 +28,7 @@ module MessagingService
       @credentials.each do |credential|
         integration_klass = provider_to_integration_klass(credential[:provider])
         response = build_integration(integration_klass, credential, to).send_message(message)
-        break response if response.success
+        return response if response.success
       end
 
       response
