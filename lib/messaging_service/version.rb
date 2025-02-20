@@ -2,6 +2,6 @@
 
 module MessagingService
 
-  VERSION = '7.3.1'
+  VERSION = '8.2.1'
 
 end
