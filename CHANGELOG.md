@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.1.0](https://github.com/sh24/messaging-service/compare/v8.0.0...v8.1.0) (2025-02-20)
+
+
+### Features
+
+* Remove airbrake ([af75c03](https://github.com/sh24/messaging-service/commit/af75c03b08fc1b585d29e28fd2490758b1f4c621))
+
 ## [8.0.0](https://github.com/sh24/messaging-service/compare/0.1.0...v8.0.0) (2025-02-20)
 
 
