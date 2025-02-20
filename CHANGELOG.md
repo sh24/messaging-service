@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.2.5](https://github.com/sh24/messaging-service/compare/v8.2.4...v8.2.5) (2025-02-20)
+
+
+### Bug Fixes
+
+* Update executables ([5bbd03a](https://github.com/sh24/messaging-service/commit/5bbd03a712f18efbf8d0531a6b19d8093a3743ae))
+
 ## [8.2.4](https://github.com/sh24/messaging-service/compare/v8.2.3...v8.2.4) (2025-02-20)
 
 
