@@ -5,16 +5,17 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'messaging_service/version'
 
 Gem::Specification.new do |s|
-  s.name        = 'messaging_service'
-  s.version     = MessagingService::VERSION
-  s.date        = '2017-04-20'
-  s.summary     = 'Messaging Service'
-  s.description = 'Shared SMS messaging services'
-  s.authors     = ['Tom Sabin', 'SH:24']
-  s.email       = 'devops@sh24.org.uk'
-  s.files       = ['lib/messaging_service']
-  s.homepage    = 'https://github.com/sh24'
-  s.license     = 'MIT'
+  s.name          = 'messaging_service'
+  s.version       = MessagingService::VERSION
+  s.date          = '2017-04-20'
+  s.summary       = 'Messaging Service'
+  s.description   = 'Shared SMS messaging services'
+  s.authors       = ['Tom Sabin', 'SH:24']
+  s.email         = 'devops@sh24.org.uk'
+  s.files         = ['lib/messaging_service']
+  s.require_paths = ['lib']
+  s.homepage      = 'https://github.com/sh24'
+  s.license       = 'MIT'
 
   s.required_ruby_version = '>= 2.5.0'
 
