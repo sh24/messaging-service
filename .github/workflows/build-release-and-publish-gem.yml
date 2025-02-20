@@ -14,4 +14,4 @@ jobs:
   build-release-and-publish-gem:
     uses: sh24/github-actions/.github/workflows/build-release-and-publish-gem.yml@main
     with:
-      gem-name: ${{ github.event.repository.name }}
+      gem-name: messaging_service
