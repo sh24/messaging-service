@@ -1,6 +1,6 @@
 ## SMS messaging service
 
-Using VoodooSMS as primary service and Twilio as fallback.
+Using VoodooSMS as primary service and Twilio as fallback
 
 Install with:
 
