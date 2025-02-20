@@ -18,9 +18,7 @@ Gem::Specification.new do |s|
   s.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   s.bindir        = 'exe'
   s.executables   = spec.files.grep(%r(^exe/)) { |f| File.basename(f) }
-  spec.require_paths = ['lib']  
-  s.homepage      = 'https://github.com/sh24'
-  s.license       = 'MIT'
+  s.require_paths = ['lib']  
 
   s.required_ruby_version = '>= 2.5.0'
 
