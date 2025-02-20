@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    messaging_service (8.2.2)
+    messaging_service (8.2.3)
       activesupport (> 5.0.0)
       twilio-ruby (~> 5.0)
       voodoo_sms (> 1.1)
