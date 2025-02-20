@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.2.3](https://github.com/sh24/messaging-service/compare/v8.2.2...v8.2.3) (2025-02-20)
+
+
+### Bug Fixes
+
+* update gem included files ([85f1569](https://github.com/sh24/messaging-service/commit/85f1569448a6cdcbab3f5fb5d89093353623ce8f))
+
 ## [8.2.2](https://github.com/sh24/messaging-service/compare/v8.2.1...v8.2.2) (2025-02-20)
 
 
