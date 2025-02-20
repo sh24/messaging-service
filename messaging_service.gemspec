@@ -19,7 +19,6 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 2.5.0'
 
   s.add_runtime_dependency 'activesupport', ['> 5.0.0']
-  s.add_runtime_dependency 'airbrake', ['> 4.0.0']
   s.add_runtime_dependency 'twilio-ruby', ['~> 5.0']
   s.add_runtime_dependency 'voodoo_sms', ['> 1.1']
 
