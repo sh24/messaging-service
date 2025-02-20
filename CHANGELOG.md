@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.2.1](https://github.com/sh24/messaging-service/compare/v8.2.0...v8.2.1) (2025-02-20)
+
+
+### Bug Fixes
+
+* Correct gem name ([51a950e](https://github.com/sh24/messaging-service/commit/51a950ea1caafc82147706aea3c389a148f8be85))
+
 ## [8.2.0](https://github.com/sh24/messaging-service/compare/v8.1.0...v8.2.0) (2025-02-20)
 
 
