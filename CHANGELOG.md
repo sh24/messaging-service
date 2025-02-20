@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.2.4](https://github.com/sh24/messaging-service/compare/v8.2.3...v8.2.4) (2025-02-20)
+
+
+### Bug Fixes
+
+* update require path ([8b6a349](https://github.com/sh24/messaging-service/commit/8b6a349f6dd48e2b34ac1b97e05af8bc49f45eb2))
+
 ## [8.2.3](https://github.com/sh24/messaging-service/compare/v8.2.2...v8.2.3) (2025-02-20)
 
 
