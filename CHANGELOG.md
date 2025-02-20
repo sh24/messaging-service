@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.2.2](https://github.com/sh24/messaging-service/compare/v8.2.1...v8.2.2) (2025-02-20)
+
+
+### Bug Fixes
+
+* require lib/ by default ([b8421ac](https://github.com/sh24/messaging-service/commit/b8421ac5fb7f7f398a303c31c6ef728ba7e0e04d))
+
 ## [8.2.1](https://github.com/sh24/messaging-service/compare/v8.2.0...v8.2.1) (2025-02-20)
 
 
