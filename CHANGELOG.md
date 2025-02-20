@@ -1,5 +1,13 @@
 # Changelog
 
+## [8.2.0](https://github.com/sh24/messaging-service/compare/v8.1.0...v8.2.0) (2025-02-20)
+
+
+### Miscellaneous Chores
+
+* release 8.2.0 ([54fd1c5](https://github.com/sh24/messaging-service/commit/54fd1c57b3f1d7ece0e29d44fc1d00075368939d))
+* release 8.2.0 ([d975fa1](https://github.com/sh24/messaging-service/commit/d975fa1ec316762e21a9a2d94ae6b7d0e8f5193a))
+
 ## [8.1.0](https://github.com/sh24/messaging-service/compare/v8.0.0...v8.1.0) (2025-02-20)
 
 
