@@ -12,8 +12,13 @@ Gem::Specification.new do |s|
   s.description   = 'Shared SMS messaging services'
   s.authors       = ['Tom Sabin', 'SH:24']
   s.email         = 'devops@sh24.org.uk'
-  s.files         = ['lib/messaging_service']
-  s.require_paths = ['lib']
+  s.homepage      = 'https://github.com/sh24'
+  s.license       = 'MIT'
+  
+  s.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
+  s.bindir        = 'exe'
+  s.executables   = spec.files.grep(%r(^exe/)) { |f| File.basename(f) }
+  spec.require_paths = ['lib']  
   s.homepage      = 'https://github.com/sh24'
   s.license       = 'MIT'
 
